@@ -20,6 +20,7 @@ class cBar{
 	protected Vector2 position;		// 位置座標.
 	protected int life;				// 命.
 	protected UISprite sprite;		// バー本体.
+	protected bool moveFlag;
 
 	public cBar(){
 		sprite = GameObject.Find ("UI Root/Panel/Bar").GetComponent<UISprite> ();
@@ -27,6 +28,7 @@ class cBar{
 		position.x = sprite.transform.position.x;
 		position.y = sprite.transform.position.y;
 		life = 3;
+		moveFlag = true;
 	}
 
 	// 位置を設定する関数.
@@ -34,26 +36,38 @@ class cBar{
 		position.x = x;
 		sprite.transform.position = new Vector3(position.x,position.y,0.0f);
 	}
+
 	// 移動処理を行う関数.
 	public void Move(eKeyCode keyCode = eKeyCode.None){
-		float moveX = 0;
-		switch (keyCode) {
+		if (moveFlag) {
+			float moveX = 0;
+			switch (keyCode) {
 			// 左が押された場合.
-		case eKeyCode.LeftArrow:
-			moveX = -0.01f;
-			break;
+			case eKeyCode.LeftArrow:
+				moveX = -0.01f;
+				if(sprite.transform.position.x < -0.43){
+					return;
+				}
+				break;
 			// 右が押された場合.
-		case eKeyCode.RightArrow:
-			moveX = 0.01f;
-			break;
-		default:
-			break;
+			case eKeyCode.RightArrow:
+				moveX = 0.01f;
+				if(sprite.transform.position.x > 0.43){
+					return;
+				}
+				break;
+			default:
+				break;
+			}
+			position.x += moveX;
+			SetPosition (position.x);
 		}
-
-		position.x += moveX;
-		SetPosition (position.x);
 	}
-	
+
+	public void SetMoveFlag(bool flag = true){
+		moveFlag = flag;
+	}
+
 	// 命を減らす関数.
 }
 
@@ -246,4 +260,10 @@ public class Game : MonoBehaviour {
 	}
 
 	// コライダーとリジットボディを利用した当たり判定を行う関数.
+	void OnTriggerEnter2D (Collider2D c){
+		if (c.gameObject.tag == "Stage") {
+			Debug.Log("hit");
+			m_myBar.SetMoveFlag(false);
+		}
+	}
 }
