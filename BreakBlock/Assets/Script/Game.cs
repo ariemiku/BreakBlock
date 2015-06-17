@@ -93,7 +93,7 @@ class cBall{
 		rotation = -45.0f;
 		sprite.transform.rotation = Quaternion.AngleAxis (rotation,Vector3.forward);
 		// 仮の初期値.
-		speed = 2.5f;
+		speed = 3.0f;
 	}
 
 	// 位置を設定する関数.
@@ -128,8 +128,9 @@ class cBall{
 			break;
 		}
 
-
-		rotation = 2 * wallAngle - rotation;
+		// 反射角を求める.
+		rotation = (2 * wallAngle) - rotation;
+		// 求めた角度の方向に向きを合わせる.
 		sprite.transform.rotation = Quaternion.AngleAxis (rotation,Vector3.forward);
 	}
 	
@@ -161,14 +162,27 @@ class cBall{
 class cBlock{
 	// ブロックがあるかないか.
 	// ブロック本体.
+	protected UISprite sprite;
 	// ブロックの位置座標.
+	Vector2 position;
 	// アイテムを持つかどうか.
 
-	public cBlock(){
+	public cBlock(int num){
+		sprite = GameObject.Find ("UI Root/Panel/BlockList/Block"+num).GetComponent<UISprite> ();
+		position = new Vector2(sprite.transform.localPosition.x,sprite.transform.localPosition.y);
 	}
 
 	// ブロックが当たった時の処理.
 	// ブロックを消す関数.
+
+	// ブロックの位置を設定する関数.
+	public void SetPosition(){
+		sprite.transform.localPosition = new Vector3(0.0f,sprite.transform.localScale.y,0.0f);
+	}
+
+	public UISprite GetSprite(){
+		return sprite;
+	}
 	// 
 }
 
@@ -190,6 +204,10 @@ class cItem{
 }
 
 public class Game : MonoBehaviour {
+	// 定数
+	public static readonly int BlockNum = 66;	// ブロックの合計数
+
+	
 	private eStatus m_Status;
 
 	private float m_downLAndRKeyTime = 0.0f;
@@ -197,10 +215,15 @@ public class Game : MonoBehaviour {
 	private cBar m_myBar;
 	private cBall m_ball;
 
+	cBlock[] m_block = new cBlock[BlockNum];
+
 	// Use this for initialization
 	void Start () {
 		m_myBar = new cBar ();
 		m_ball = new cBall ();
+		for(int i=0;i<BlockNum;i++){
+			m_block[i] = new cBlock (i+1);
+		}
 		m_Status = eStatus.Tutorial;
 		Transit (m_Status);
 	}
