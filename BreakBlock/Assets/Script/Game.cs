@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+using UnityEngine.UI;
+
 // ステータス.
 public enum eStatus{
 	Tutorial,
@@ -16,6 +18,14 @@ enum eKeyCode{
 	None,
 };
 
+enum eReflectCode{
+	RightWall,
+	LeftWall,
+	TopWall,
+	UnderWall,
+	None,
+};
+
 class cBar{
 	protected Vector2 position;		// 位置座標.
 	protected int life;				// 命.
@@ -25,8 +35,8 @@ class cBar{
 	public cBar(){
 		sprite = GameObject.Find ("UI Root/Panel/Bar").GetComponent<UISprite> ();
 		position = new Vector2 (0.0f,0.0f);
-		position.x = sprite.transform.position.x;
-		position.y = sprite.transform.position.y;
+		position.x = sprite.transform.localPosition.x;
+		position.y = sprite.transform.localPosition.y;
 		life = 3;
 		moveFlag = true;
 	}
@@ -34,7 +44,7 @@ class cBar{
 	// 位置を設定する関数.
 	public void SetPosition(float x){
 		position.x = x;
-		sprite.transform.position = new Vector3(position.x,position.y,0.0f);
+		sprite.transform.localPosition = new Vector3(position.x,position.y,0.0f);
 	}
 
 	// 移動処理を行う関数.
@@ -44,15 +54,15 @@ class cBar{
 			switch (keyCode) {
 			// 左が押された場合.
 			case eKeyCode.LeftArrow:
-				moveX = -0.01f;
-				if(sprite.transform.position.x < -0.43){
+				moveX = -5.0f;
+				if(sprite.transform.localPosition.x <= -180){
 					return;
 				}
 				break;
 			// 右が押された場合.
 			case eKeyCode.RightArrow:
-				moveX = 0.01f;
-				if(sprite.transform.position.x > 0.43){
+				moveX = 5.0f;
+				if(sprite.transform.localPosition.x >= 180){
 					return;
 				}
 				break;
@@ -74,20 +84,73 @@ class cBar{
 class cBall{
 	protected float speed;			// ボールの速度.
 	// 位置座標.
+	protected UISprite sprite;		// ボール本体.
+	protected float rotation;
 
-	cBall(){
+	public cBall(){
+		sprite = GameObject.Find ("UI Root/Panel/Ball").GetComponent<UISprite> ();
+		// 初期設定としてボールの向きを傾けておく.
+		rotation = -45.0f;
+		sprite.transform.rotation = Quaternion.AngleAxis (rotation,Vector3.forward);
 		// 仮の初期値.
-		speed = 0.5f;
+		speed = 2.5f;
+	}
+
+	// 位置を設定する関数.
+	public void SetPosition(Vector2 position){
+		sprite.transform.localPosition = new Vector3(position.x,position.y,0.0f);
 	}
 
 	// 反射を行う関数.
+	public void Reflect(eReflectCode reflectCode){
+		//float reflectAngle;
+		float wallAngle = 0.0f;
+		switch (reflectCode) {
+		case eReflectCode.RightWall:
+			// 右の壁に衝突.
+			wallAngle = 180.0f;
+			break;
+		case eReflectCode.LeftWall:
+			// 右の壁に衝突.
+			wallAngle = 0.0f;
+			break;
+		case eReflectCode.TopWall:
+			// 右の壁に衝突.
+			wallAngle = 90.0f;
+			break;
+		case eReflectCode.UnderWall:
+			// 右の壁に衝突.
+			wallAngle = 270.0f;
+			break;
+		}
+
+
+		rotation = 2 * wallAngle - rotation;
+		sprite.transform.rotation = Quaternion.AngleAxis (rotation,Vector3.forward);
+	}
+	
 	// ボールの移動行う関数.
 	public void Move(){
-		Debug.Log ("ボールの移動");
+		Vector2 pos;
+		pos.x = sprite.transform.localPosition.x;
+		pos.y = sprite.transform.localPosition.y;
+
+		Vector2 move;
+		move.x = sprite.transform.up.x * speed;
+		move.y = sprite.transform.up.y * speed;
+
+		// 自身の向きに移動
+		pos.x += move.x;
+		pos.y += move.y;
+
+		SetPosition (pos);
 	}
+
+
 	// 速度を設定する関数.
+	/*
 	public void SetSpeed(){
-	}
+	}*/
 	// 速度を変更する関数.
 }
 
@@ -97,7 +160,7 @@ class cBlock{
 	// ブロックの位置座標.
 	// アイテムを持つかどうか.
 
-	cBlock(){
+	public cBlock(){
 	}
 
 	// ブロックが当たった時の処理.
@@ -110,13 +173,14 @@ class cItem{
 	// アイテム本体.
 	// アイテムの種類.
 
-	cItem(){
+	public cItem(){
 		position = new Vector2 (0.0f,0.0f);
 	}
 
 	// 落下処理を行う関数.
+	/*
 	public void Fall(){
-	}
+	}*/
 	// アイテムの効果反映を行う関数.
 	// アイテムをランダムでセットする関数.
 }
@@ -126,11 +190,13 @@ public class Game : MonoBehaviour {
 
 	private float m_downLAndRKeyTime = 0.0f;
 
-	cBar m_myBar;
-	
+	private cBar m_myBar;
+	private cBall m_ball;
+
 	// Use this for initialization
 	void Start () {
 		m_myBar = new cBar ();
+		m_ball = new cBall ();
 		m_Status = eStatus.Tutorial;
 		Transit (m_Status);
 	}
@@ -183,8 +249,11 @@ public class Game : MonoBehaviour {
 	
 	// play状態の更新関数.
 	void UpdatePlay(){
+		m_ball.Move();
+
 		// RightArrowキーで右へ移動.
 		if (Input.GetKey (KeyCode.RightArrow) && !Input.GetKey (KeyCode.LeftArrow)) {
+
 			m_downLAndRKeyTime += Time.deltaTime;
 			
 			if (m_downLAndRKeyTime >= 0.01f) {
@@ -260,10 +329,23 @@ public class Game : MonoBehaviour {
 	}
 
 	// コライダーとリジットボディを利用した当たり判定を行う関数.
-	void OnTriggerEnter2D (Collider2D c){
-		if (c.gameObject.tag == "Stage") {
-			Debug.Log("hit");
-			m_myBar.SetMoveFlag(false);
+	void OnTriggerEnter2D(Collider2D c){
+		// 壁にぶつかったら反射を行う.
+		if (c.gameObject.tag == "RightWall") {
+			m_ball.Reflect(eReflectCode.RightWall);
 		}
+		if (c.gameObject.tag == "LeftWall") {
+			m_ball.Reflect(eReflectCode.LeftWall);
+		}
+		if (c.gameObject.tag == "TopWall") {
+			m_ball.Reflect(eReflectCode.TopWall);
+		}
+		if (c.gameObject.tag == "UnderWall") {
+			m_ball.Reflect(eReflectCode.UnderWall);
+		}
+	}
+	
+	void OnCollisionEnter(Collision collision ) {
+		Debug.Log("hit2");
 	}
 }
