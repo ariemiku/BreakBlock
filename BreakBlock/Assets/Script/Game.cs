@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-using UnityEngine.UI;
+using System.Collections.Generic;
+//using UnityEngine.UI;
 
 // ステータス.
 public enum eStatus{
@@ -45,6 +46,11 @@ class cBar{
 	public void SetPosition(float x){
 		position.x = x;
 		sprite.transform.localPosition = new Vector3(position.x,position.y,0.0f);
+	}
+
+	// 位置を取得する関数.
+	public Vector2 GetPosition(){
+		return position;
 	}
 
 	// 移動処理を行う関数.
@@ -118,12 +124,12 @@ class cBall{
 			// 上の壁に衝突.
 			wallAngle = 90.0f;
 			break;
-		case eReflectCode.Bar:
-			// 上の壁に衝突.
-			wallAngle = 270.0f;
-			break;
 		case eReflectCode.UnderWall:
 			// 下の壁に衝突.
+			wallAngle = 270.0f;
+			break;
+		case eReflectCode.Bar:
+			// 上の壁に衝突.
 			wallAngle = 270.0f;
 			break;
 		}
@@ -161,29 +167,29 @@ class cBall{
 
 class cBlock{
 	// ブロックがあるかないか.
-	// ブロック本体.
-	protected UISprite sprite;
-	// ブロックの位置座標.
-	Vector2 position;
+	//protected UISprite sprite;			// ブロック本体.
+	//protected Vector2 position;			// ブロックの位置座標.
 	// アイテムを持つかどうか.
+	// 何回当たれば消えるのか.
 
-	public cBlock(int num){
-		sprite = GameObject.Find ("UI Root/Panel/BlockList/Block"+num).GetComponent<UISprite> ();
-		position = new Vector2(sprite.transform.localPosition.x,sprite.transform.localPosition.y);
+	// 引数有のコンストラクタ.
+	public cBlock(/*int num*/){
+		//sprite = GameObject.Find ("UI Root/Panel/BlockList/Block"+num).GetComponent<UISprite> ();
+		//position = new Vector2(sprite.transform.localPosition.x,sprite.transform.localPosition.y);
 	}
 
 	// ブロックが当たった時の処理.
-	// ブロックを消す関数.
 
-	// ブロックの位置を設定する関数.
-	public void SetPosition(){
-		sprite.transform.localPosition = new Vector3(0.0f,sprite.transform.localScale.y,0.0f);
-	}
+	// UISpriteを取得する関数
+	//public UISprite GetSprite(){
+	//	return sprite;
+	//}
+	public bool CheckDelete(GameObject gameobject){
+		//UISprite sprite = gameobject.GetComponent<UISprite> ();
 
-	public UISprite GetSprite(){
-		return sprite;
+
+		return true;
 	}
-	// 
 }
 
 class cItem{
@@ -207,7 +213,8 @@ public class Game : MonoBehaviour {
 	// 定数
 	public static readonly int BlockNum = 66;	// ブロックの合計数
 
-	
+	private List<string> m_hitHardBlockList = new List<string> ();
+
 	private eStatus m_Status;
 
 	private float m_downLAndRKeyTime = 0.0f;
@@ -215,15 +222,16 @@ public class Game : MonoBehaviour {
 	private cBar m_myBar;
 	private cBall m_ball;
 
-	cBlock[] m_block = new cBlock[BlockNum];
+	//cBlock[] m_block = new cBlock[BlockNum];
 
 	// Use this for initialization
 	void Start () {
 		m_myBar = new cBar ();
 		m_ball = new cBall ();
+		/*
 		for(int i=0;i<BlockNum;i++){
 			m_block[i] = new cBlock (i+1);
-		}
+		}*/
 		m_Status = eStatus.Tutorial;
 		Transit (m_Status);
 	}
@@ -355,6 +363,8 @@ public class Game : MonoBehaviour {
 		}
 	}
 
+
+
 	// コライダーとリジットボディを利用した当たり判定を行う関数.
 	void OnTriggerEnter2D(Collider2D c){
 		// 壁にぶつかったら反射を行う.
@@ -373,9 +383,92 @@ public class Game : MonoBehaviour {
 		if (c.gameObject.tag == "UnderWall") {
 			m_ball.Reflect(eReflectCode.UnderWall);
 		}
-	}
-	
-	void OnCollisionEnter(Collision collision ) {
-		Debug.Log("hit2");
+
+		// ブロックに衝突した場合
+		if (c.gameObject.tag == "BlockTop") {
+			m_ball.Reflect(eReflectCode.UnderWall);
+
+			UISprite sprite = c.gameObject.transform.parent.gameObject.GetComponent<UISprite> ();
+			if(sprite.spriteName == "HardBlock"){			
+				for(int i=0;i<m_hitHardBlockList.Count;i++){
+					if(m_hitHardBlockList[i] == c.gameObject.transform.parent.gameObject.name){
+						// 2回目なのでリストから削除.
+						m_hitHardBlockList.RemoveAt(i);
+						// 衝突したブロック自体（親）を消す
+						Destroy(c.gameObject.transform.parent.gameObject);
+					}
+				}
+				// まだなかったらリストに追加する.
+				m_hitHardBlockList.Add(c.gameObject.transform.parent.gameObject.name);
+			}
+			else{
+				// 衝突したブロック自体（親）を消す
+				Destroy(c.gameObject.transform.parent.gameObject);
+			}
+		}
+		else if (c.gameObject.tag == "BlockUnder") {
+			m_ball.Reflect(eReflectCode.TopWall);
+
+			UISprite sprite = c.gameObject.transform.parent.gameObject.GetComponent<UISprite> ();
+			if(sprite.spriteName == "HardBlock"){			
+				for(int i=0;i<m_hitHardBlockList.Count;i++){
+					if(m_hitHardBlockList[i] == c.gameObject.transform.parent.gameObject.name){
+						// 2回目なのでリストから削除.
+						m_hitHardBlockList.RemoveAt(i);
+						// 衝突したブロック自体（親）を消す
+						Destroy(c.gameObject.transform.parent.gameObject);
+					}
+				}
+				Debug.Log(c.gameObject.transform.parent.gameObject.name);
+				// まだなかったらリストに追加する.
+				m_hitHardBlockList.Add(c.gameObject.transform.parent.gameObject.name);
+			}
+			else{
+				// 衝突したブロック自体（親）を消す
+				Destroy(c.gameObject.transform.parent.gameObject);
+			}
+		}
+		else if (c.gameObject.tag == "BlockRight") {
+			m_ball.Reflect(eReflectCode.LeftWall);
+
+			UISprite sprite = c.gameObject.transform.parent.gameObject.GetComponent<UISprite> ();
+			if(sprite.spriteName == "HardBlock"){			
+				for(int i=0;i<m_hitHardBlockList.Count;i++){
+					if(m_hitHardBlockList[i] == c.gameObject.transform.parent.gameObject.name){
+						// 2回目なのでリストから削除.
+						m_hitHardBlockList.RemoveAt(i);
+						// 衝突したブロック自体（親）を消す
+						Destroy(c.gameObject.transform.parent.gameObject);
+					}
+				}
+				// まだなかったらリストに追加する.
+				m_hitHardBlockList.Add(c.gameObject.transform.parent.gameObject.name);
+			}
+			else{
+				// 衝突したブロック自体（親）を消す
+				Destroy(c.gameObject.transform.parent.gameObject);
+			}
+		}
+		else if (c.gameObject.tag == "BlockLeft") {
+			m_ball.Reflect(eReflectCode.RightWall);
+
+			UISprite sprite = c.gameObject.transform.parent.gameObject.GetComponent<UISprite> ();
+			if(sprite.spriteName == "HardBlock"){			
+				for(int i=0;i<m_hitHardBlockList.Count;i++){
+					if(m_hitHardBlockList[i] == c.gameObject.transform.parent.gameObject.name){
+						// 2回目なのでリストから削除.
+						m_hitHardBlockList.RemoveAt(i);
+						// 衝突したブロック自体（親）を消す
+						Destroy(c.gameObject.transform.parent.gameObject);
+					}
+				}
+				// まだなかったらリストに追加する.
+				m_hitHardBlockList.Add(c.gameObject.transform.parent.gameObject.name);
+			}
+			else{
+				// 衝突したブロック自体（親）を消す
+				Destroy(c.gameObject.transform.parent.gameObject);
+			}
+		}
 	}
 }
