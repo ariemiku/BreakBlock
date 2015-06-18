@@ -194,17 +194,29 @@ class cBlock{
 
 class cItem{
 	protected Vector2 position;				// アイテムの位置座標.
-	// アイテム本体.
+	protected UISprite sprite;				// アイテム本体.
+	protected float speed;
 	// アイテムの種類.
 
 	public cItem(){
 		position = new Vector2 (0.0f,0.0f);
+		sprite = GameObject.Find ("UI Root/Panel/Item").GetComponent<UISprite> ();
+		position = sprite.transform.localPosition;
+		speed = 1.0f;
+	}
+
+	public void SetPosition(Vector2 pos){
+		position = pos;
+		sprite.transform.localPosition = position;
 	}
 
 	// 落下処理を行う関数.
-	/*
 	public void Fall(){
-	}*/
+		Vector2 pos = sprite.transform.localPosition;
+		pos.y -= speed;
+				
+		SetPosition (pos);
+	}
 	// アイテムの効果反映を行う関数.
 	// アイテムをランダムでセットする関数.
 }
@@ -221,6 +233,7 @@ public class Game : MonoBehaviour {
 
 	private cBar m_myBar;
 	private cBall m_ball;
+	private cItem m_item;
 
 	//cBlock[] m_block = new cBlock[BlockNum];
 
@@ -228,6 +241,7 @@ public class Game : MonoBehaviour {
 	void Start () {
 		m_myBar = new cBar ();
 		m_ball = new cBall ();
+		m_item = new cItem ();
 		/*
 		for(int i=0;i<BlockNum;i++){
 			m_block[i] = new cBlock (i+1);
@@ -285,6 +299,8 @@ public class Game : MonoBehaviour {
 	// play状態の更新関数.
 	void UpdatePlay(){
 		m_ball.Move();
+
+		m_item.Fall ();
 
 		// RightArrowキーで右へ移動.
 		if (Input.GetKey (KeyCode.RightArrow) && !Input.GetKey (KeyCode.LeftArrow)) {
