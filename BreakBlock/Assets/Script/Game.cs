@@ -193,16 +193,19 @@ class cBlock{
 }
 
 class cItem{
+	public static readonly int UnderPositionY = -350;
 	protected Vector2 position;				// アイテムの位置座標.
 	protected UISprite sprite;				// アイテム本体.
 	protected float speed;
+	protected bool fallFlag;
 	// アイテムの種類.
 
 	public cItem(){
 		position = new Vector2 (0.0f,0.0f);
 		sprite = GameObject.Find ("UI Root/Panel/Item").GetComponent<UISprite> ();
 		position = sprite.transform.localPosition;
-		speed = 1.0f;
+		speed = 1.5f;
+		fallFlag = false;
 	}
 
 	public void SetPosition(Vector2 pos){
@@ -210,12 +213,21 @@ class cItem{
 		sprite.transform.localPosition = position;
 	}
 
+	public void SetFallFlag(bool flag = false){
+		fallFlag = flag;
+	}
+
 	// 落下処理を行う関数.
 	public void Fall(){
 		Vector2 pos = sprite.transform.localPosition;
-		pos.y -= speed;
+		if (fallFlag) {
+			pos.y -= speed;
 				
-		SetPosition (pos);
+			SetPosition (pos);
+			if(pos.y<UnderPositionY){
+				fallFlag=false;
+			}
+		}
 	}
 	// アイテムの効果反映を行う関数.
 	// アイテムをランダムでセットする関数.
@@ -403,7 +415,8 @@ public class Game : MonoBehaviour {
 		// ブロックに衝突した場合
 		if (c.gameObject.tag == "BlockTop") {
 			m_ball.Reflect(eReflectCode.UnderWall);
-
+			Destroy(c.gameObject.transform.parent.gameObject);
+			/*
 			UISprite sprite = c.gameObject.transform.parent.gameObject.GetComponent<UISprite> ();
 			if(sprite.spriteName == "HardBlock"){			
 				for(int i=0;i<m_hitHardBlockList.Count;i++){
@@ -420,11 +433,17 @@ public class Game : MonoBehaviour {
 			else{
 				// 衝突したブロック自体（親）を消す
 				Destroy(c.gameObject.transform.parent.gameObject);
-			}
+			}*/
 		}
 		else if (c.gameObject.tag == "BlockUnder") {
 			m_ball.Reflect(eReflectCode.TopWall);
+			Debug.Log(c.gameObject.transform.parent.gameObject.transform.localPosition);
+			m_item.SetPosition(c.gameObject.transform.parent.gameObject.transform.localPosition);
+			m_item.SetFallFlag(true);
 
+			Destroy(c.gameObject.transform.parent.gameObject);
+
+			/*
 			UISprite sprite = c.gameObject.transform.parent.gameObject.GetComponent<UISprite> ();
 			if(sprite.spriteName == "HardBlock"){			
 				for(int i=0;i<m_hitHardBlockList.Count;i++){
@@ -442,11 +461,12 @@ public class Game : MonoBehaviour {
 			else{
 				// 衝突したブロック自体（親）を消す
 				Destroy(c.gameObject.transform.parent.gameObject);
-			}
+			}*/
 		}
 		else if (c.gameObject.tag == "BlockRight") {
 			m_ball.Reflect(eReflectCode.LeftWall);
-
+			Destroy(c.gameObject.transform.parent.gameObject);
+			/*
 			UISprite sprite = c.gameObject.transform.parent.gameObject.GetComponent<UISprite> ();
 			if(sprite.spriteName == "HardBlock"){			
 				for(int i=0;i<m_hitHardBlockList.Count;i++){
@@ -463,11 +483,12 @@ public class Game : MonoBehaviour {
 			else{
 				// 衝突したブロック自体（親）を消す
 				Destroy(c.gameObject.transform.parent.gameObject);
-			}
+			}*/
 		}
 		else if (c.gameObject.tag == "BlockLeft") {
 			m_ball.Reflect(eReflectCode.RightWall);
-
+			Destroy(c.gameObject.transform.parent.gameObject);
+			/*
 			UISprite sprite = c.gameObject.transform.parent.gameObject.GetComponent<UISprite> ();
 			if(sprite.spriteName == "HardBlock"){			
 				for(int i=0;i<m_hitHardBlockList.Count;i++){
@@ -484,7 +505,7 @@ public class Game : MonoBehaviour {
 			else{
 				// 衝突したブロック自体（親）を消す
 				Destroy(c.gameObject.transform.parent.gameObject);
-			}
+			}*/
 		}
 	}
 }
