@@ -32,6 +32,7 @@ class cBar{
 	protected int life;				// 命.
 	protected UISprite sprite;		// バー本体.
 	protected bool moveFlag;
+	BarCollision barCollision;
 
 	public cBar(){
 		sprite = GameObject.Find ("UI Root/Panel/Bar").GetComponent<UISprite> ();
@@ -202,7 +203,7 @@ class cItem{
 
 	public cItem(){
 		position = new Vector2 (0.0f,0.0f);
-		sprite = GameObject.Find ("UI Root/Panel/Item").GetComponent<UISprite> ();
+		sprite = GameObject.Find ("UI Root/Panel/Item1").GetComponent<UISprite> ();
 		position = sprite.transform.localPosition;
 		speed = 1.5f;
 		fallFlag = false;
@@ -229,15 +230,58 @@ class cItem{
 			}
 		}
 	}
+
+	public bool CheckMove(){
+		if (fallFlag) {
+			return true;
+		}
+		return false;
+	}
+
 	// アイテムの効果反映を行う関数.
 	// アイテムをランダムでセットする関数.
+}
+
+class cItem1 : cItem{
+	public cItem1(){
+		sprite = GameObject.Find ("UI Root/Panel/Item1").GetComponent<UISprite> ();
+		position = sprite.transform.localPosition;
+	}
+}
+
+class cItem2 : cItem{
+	public cItem2(){
+		sprite = GameObject.Find ("UI Root/Panel/Item2").GetComponent<UISprite> ();
+		position = sprite.transform.localPosition;
+	}
+}
+
+class cItem3 : cItem{
+	public cItem3(){
+		sprite = GameObject.Find ("UI Root/Panel/Item3").GetComponent<UISprite> ();
+		position = sprite.transform.localPosition;
+	}
+}
+
+class cItem4 : cItem{
+	public cItem4(){
+		sprite = GameObject.Find ("UI Root/Panel/Item4").GetComponent<UISprite> ();
+		position = sprite.transform.localPosition;
+	}
+}
+
+class cItem5 : cItem{
+	public cItem5(){
+		sprite = GameObject.Find ("UI Root/Panel/Item5").GetComponent<UISprite> ();
+		position = sprite.transform.localPosition;
+	}
 }
 
 public class Game : MonoBehaviour {
 	// 定数
 	public static readonly int BlockNum = 66;	// ブロックの合計数
 
-	private List<string> m_hitHardBlockList = new List<string> ();
+	//private List<string> m_hitHardBlockList = new List<string> ();
 
 	private eStatus m_Status;
 
@@ -254,6 +298,7 @@ public class Game : MonoBehaviour {
 		m_myBar = new cBar ();
 		m_ball = new cBall ();
 		m_item = new cItem ();
+
 		/*
 		for(int i=0;i<BlockNum;i++){
 			m_block[i] = new cBlock (i+1);
@@ -391,7 +436,27 @@ public class Game : MonoBehaviour {
 		}
 	}
 
-
+	void SetRandomItem(){
+		int randomNum = Random.Range (1,5+1);
+		Debug.Log (randomNum);
+		switch (randomNum) {
+		case 1:
+			m_item = new cItem1();
+			break;
+		case 2:
+			m_item = new cItem2();
+			break;
+		case 3:
+			m_item = new cItem3();
+			break;
+		case 4:
+			m_item = new cItem4();
+			break;
+		case 5:
+			m_item = new cItem5();
+			break;
+		}
+	}
 
 	// コライダーとリジットボディを利用した当たり判定を行う関数.
 	void OnTriggerEnter2D(Collider2D c){
@@ -411,6 +476,7 @@ public class Game : MonoBehaviour {
 		if (c.gameObject.tag == "UnderWall") {
 			m_ball.Reflect(eReflectCode.UnderWall);
 		}
+
 
 		// ブロックに衝突した場合
 		if (c.gameObject.tag == "BlockTop") {
@@ -437,9 +503,11 @@ public class Game : MonoBehaviour {
 		}
 		else if (c.gameObject.tag == "BlockUnder") {
 			m_ball.Reflect(eReflectCode.TopWall);
-			Debug.Log(c.gameObject.transform.parent.gameObject.transform.localPosition);
-			m_item.SetPosition(c.gameObject.transform.parent.gameObject.transform.localPosition);
-			m_item.SetFallFlag(true);
+			if(!m_item.CheckMove()){
+				SetRandomItem();
+				m_item.SetPosition(c.gameObject.transform.parent.gameObject.transform.localPosition);
+				m_item.SetFallFlag(true);
+			}
 
 			Destroy(c.gameObject.transform.parent.gameObject);
 
