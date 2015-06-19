@@ -105,6 +105,13 @@ class cBar{
 		life += 1;
 	}
 	// 命を減らす関数.
+	public void SubtractionLife(){
+		life -= 1;
+	}
+
+	public int GetLife(){
+		return life;
+	}
 }
 
 class cBall{
@@ -122,6 +129,15 @@ class cBall{
 		speed = 3.0f;
 	}
 
+	public cBall(string place){
+		sprite = GameObject.Find (place).GetComponent<UISprite> ();
+		// 初期設定としてボールの向きを傾けておく.
+		rotation = -45.0f;
+		sprite.transform.rotation = Quaternion.AngleAxis (rotation,Vector3.forward);
+		// 仮の初期値.
+		speed = 3.0f;
+	}
+	
 	// 位置を設定する関数.
 	public void SetPosition(Vector2 position){
 		sprite.transform.localPosition = new Vector3(position.x,position.y,0.0f);
@@ -180,6 +196,10 @@ class cBall{
 	public void Scaling(){
 		sprite.transform.localScale =  new Vector3(1.5f,1.5f,sprite.transform.localScale.z);
 	}
+
+	public Vector2 GetPosition(){
+		return sprite.transform.localPosition;
+	}
 	
 	// 速度を設定する関数.
 	public void SetSpeed(float revisedSpeed){
@@ -224,6 +244,7 @@ class cItem{
 	protected float effectTime;
 	protected bool usingFlag = false;
 	protected float usingTime = 0.0f;
+	protected bool pierceFlag = false;
 
 	public cItem(){
 		position = new Vector2 (0.0f,0.0f);
@@ -270,13 +291,17 @@ class cItem{
 	}
 
 	// アイテムの効果反映を行う関数.
-	public virtual void Effect(cBar bar,cBall ball){
+	public virtual void Effect(cBar bar,cBall ball,cBall ball2,cBall ball3){
 	}
 
 	public void SetUsingFlag(bool flag = false){
 		usingFlag = flag;
 	}
 
+	public bool GetPierceFlag(){
+		return pierceFlag;
+	}
+	
 	//public virtual void ReflectionEffect(cBar bar,cBall ball){
 	//}
 }
@@ -288,7 +313,7 @@ class cItem1 : cItem{
 	}
 
 	// バーを伸ばす処理.
-	public override void Effect(cBar bar,cBall ball){
+	public override void Effect(cBar bar,cBall ball,cBall ball2,cBall ball3){
 		bar.SetInitialize ();
 		bar.Scaling ();
 	}
@@ -313,8 +338,9 @@ class cItem2 : cItem{
 	}
 
 	// ボールを3つにする処理.
-	public override void Effect(cBar bar,cBall ball){
-		ball.Scaling ();
+	public override void Effect(cBar bar,cBall ball,cBall ball2,cBall ball3){
+		ball2.SetPosition (ball.GetPosition());
+		ball3.SetPosition (ball.GetPosition());
 	}
 
 }
@@ -326,10 +352,9 @@ class cItem3 : cItem{
 	}
 
 	// 一定時間ブロックを貫通する処理.
-	/*
-	public override void Effect(cBar bar,cBall ball){
-		
-	}*/
+	public override void Effect(cBar bar,cBall ball,cBall ball2,cBall ball3){
+		pierceFlag = true;	
+	}
 }
 
 class cItem4 : cItem{
@@ -339,22 +364,10 @@ class cItem4 : cItem{
 	}
 
 	// バーの移動速度を上げる処理
-	public override void Effect(cBar bar,cBall ball){
+	public override void Effect(cBar bar,cBall ball,cBall ball2,cBall ball3){
 		bar.SetInitialize ();
 		bar.UpSpeed ();
 	}
-	/*
-	public override void ReflectionEffect(cBar bar,cBall ball){
-		if (usingFlag) {
-			usingTime += Time.deltaTime;
-			Debug.Log("in");
-			if(usingTime > 3.0f){
-				bar.SetInitialize ();
-				usingFlag = false;
-				usingTime = 0.0f;
-			}
-		}
-	}*/
 }
 
 class cItem5 : cItem{
@@ -364,7 +377,7 @@ class cItem5 : cItem{
 	}
 
 	// 命を増やす処理
-	public override void Effect(cBar bar,cBall ball){
+	public override void Effect(cBar bar,cBall ball,cBall ball2,cBall ball3){
 		bar.AddLife ();
 	}
 }
@@ -375,22 +388,42 @@ public class Game : MonoBehaviour {
 
 	//private List<string> m_hitHardBlockList = new List<string> ();
 
+	private UILabel m_lavel;
+
 	private eStatus m_Status;
 
 	private cBar m_myBar;
-	private cBall m_ball;
-	private cItem m_item;
-
 	private GameObject m_bar;
 	private BarCollision m_barCollision;
+
+	private cBall m_ball;
+	private GameObject m_ballGameObject;
+	private BallCollision m_ballCollision;
+
+	private cBall m_ball2;
+	private cBall m_ball3;
+
+
+	private cItem m_item;
+
 	private int m_deleteCount = 0;
+	private int m_ballCount=1;
 
 	// Use this for initialization
 	void Start () {
+		m_lavel = GameObject.Find ("UI Root/Panel/Label").GetComponent<UILabel> ();
+
 		m_bar = GameObject.Find ("Bar");
 		m_barCollision = m_bar.GetComponent<BarCollision> ();
 		m_myBar = new cBar ();
+
 		m_ball = new cBall ();
+		m_ballGameObject = GameObject.Find ("Ball");
+		m_ballCollision = m_ballGameObject.GetComponent<BallCollision> ();
+
+		m_ball2 = new cBall ("UI Root/Panel/Ball2");
+		m_ball3 = new cBall ("UI Root/Panel/Ball3");
+
 		m_item = new cItem ();
 		m_Status = eStatus.Tutorial;
 
@@ -399,22 +432,29 @@ public class Game : MonoBehaviour {
 
 	void StartTutorial(eStatus PrevStatus){
 		// 代わった時に1回しかやらないことをする.
+		m_ball.SetPosition (new Vector2 (m_myBar.GetPosition().x+5.0f,m_myBar.GetPosition().y+20.0f));
+		m_ballCount = 1;
+		m_ball = new cBall ();
 		Debug.Log ("Tutorial");
+		m_lavel.text = "Tutorial";
 	}
 	
 	void StartPlay(eStatus PrevStatus){
 		// 代わった時に1回しかやらないことをする.
 		Debug.Log ("Play");
+		m_lavel.text = "Game";
 	}
 	
 	void StartGameover(eStatus PrevStatus){
 		// 代わった時に1回しかやらないことをする.
 		Debug.Log ("Gameover");
+		m_lavel.text = "Gameover";
 	}
 
 	void StartGameClear(eStatus PrevStatus){
 		// 代わった時に1回しかやらないことをする.
 		Debug.Log ("GameClear");
+		m_lavel.text = "GameClear";
 	}
 	
 	// Update is called once per frame
@@ -459,22 +499,38 @@ public class Game : MonoBehaviour {
 
 		if (m_barCollision.HitItem()) {
 			m_item.SetUsingFlag(true);
-			m_item.Effect(m_myBar,m_ball);
+			m_item.Effect(m_myBar,m_ball,m_ball2,m_ball3);
 			m_item.SetInitializePos();
 		}
 
+		if (m_ballCollision.Over ()) {
+			m_ball.SetSpeed(0.0f);
+			m_ballCount-=1;
+			m_ballCollision.SetOverFlag();
+		}
+		if (m_ballCollision.Reflect()) {
+			m_deleteCount = m_ballCollision.DeleteCount();
+			ManageHit(m_ball,m_ballCollision.HitTagName());
+		}
 		m_ball.Move();
+				
 		m_myBar.DrawLabel ();
 		m_item.Fall ();
 
 		//m_item.ReflectionEffect (m_myBar,m_ball);
 		// ---------------------------------------------------------
-		// enterキーでゲームオーバーへ遷移
-		if (Input.GetKeyDown (KeyCode.Return)) {
-			Transit (eStatus.Gameover);
+		// ゲームオーバーへ遷移
+		if (m_ballCount <= 0) {
+			Debug.Log(m_myBar.GetLife());
+			if(m_myBar.GetLife() <= 0){
+				Transit (eStatus.Gameover);
+			}else{
+				m_myBar.SubtractionLife();
+				Transit (eStatus.Tutorial);
+			}
 		}
-		// Spaceキーでゲームクリアへ遷移.
-		if (Input.GetKeyDown (KeyCode.Space)) {
+		// ゲームクリアへ遷移.
+		if (m_deleteCount >= BlockNum) {
 			Transit (eStatus.GameClear);
 		}
 	}
@@ -541,63 +597,61 @@ public class Game : MonoBehaviour {
 		}
 	}
 
-	// コライダーとリジットボディを利用した当たり判定を行う関数.
-	void OnTriggerEnter2D(Collider2D c){
-		// 壁にぶつかったら反射を行う.
-		if (c.gameObject.tag == "RightWall") {
-			m_ball.Reflect(eReflectCode.RightWall);
-		}
-		if (c.gameObject.tag == "LeftWall") {
-			m_ball.Reflect(eReflectCode.LeftWall);
-		}
-		if (c.gameObject.tag == "TopWall") {
-			m_ball.Reflect(eReflectCode.TopWall);
-		}
-		if (c.gameObject.tag == "Bar") {
+	void ManageHit(cBall ball, string hitTagName){
+		switch(hitTagName){
+		case null:
+			break;
+		case "RightWall":
+			ball.Reflect(eReflectCode.RightWall);
+			break;
+		case "LeftWall":
+			ball.Reflect(eReflectCode.LeftWall);
+			break;
+		case "TopWall":
+			ball.Reflect(eReflectCode.TopWall);
+			break;
+		case "Bar":
 			m_ball.Reflect(eReflectCode.Bar);
-		}
-		if (c.gameObject.tag == "UnderWall") {
-			m_ball.Reflect(eReflectCode.UnderWall);
-		}
-
-
-		// ブロックに衝突した場合
-		if (c.gameObject.tag == "BlockTop") {
-			m_deleteCount+=1;
-			m_ball.Reflect(eReflectCode.UnderWall);
-			// 衝突したブロック自体（親）を消す
-			Destroy(c.gameObject.transform.parent.gameObject);
-		}
-		else if (c.gameObject.tag == "BlockUnder") {
-			m_deleteCount+=1;
-			m_ball.Reflect(eReflectCode.TopWall);
+			break;
+		case "BlockTop":
+			if(!m_item.GetPierceFlag()){
+				ball.Reflect(eReflectCode.UnderWall);
+			}
+			break;
+		case "BlockUnder":
+			if(!m_item.GetPierceFlag()){
+				ball.Reflect(eReflectCode.TopWall);
+			}
 			if(!m_item.CheckMove()){
 				SetRandomItem();
-				m_item.SetPosition(c.gameObject.transform.parent.gameObject.transform.localPosition);
+				m_item.SetPosition(m_ballCollision.BreakBlockPosition());
 				m_item.SetFallFlag(true);
 			}
-			// 衝突したブロック自体（親）を消す
-			Destroy(c.gameObject.transform.parent.gameObject);
+			break;
+		case "BlockRight":
+			if(!m_item.GetPierceFlag()){
+				ball.Reflect(eReflectCode.LeftWall);
+			}
+			break;
+		case "BlockLeft":
+			if(!m_item.GetPierceFlag()){
+				ball.Reflect(eReflectCode.RightWall);
+			}
+			break;
 		}
-		else if (c.gameObject.tag == "BlockRight") {
-			m_deleteCount+=1;
-			m_ball.Reflect(eReflectCode.LeftWall);
-			// 衝突したブロック自体（親）を消す
-			Destroy(c.gameObject.transform.parent.gameObject);
-		}
-		else if (c.gameObject.tag == "BlockLeft") {
-			m_deleteCount+=1;
-			m_ball.Reflect(eReflectCode.RightWall);
-			// 衝突したブロック自体（親）を消す
-			Destroy(c.gameObject.transform.parent.gameObject);
-		}
+		Debug.Log (m_item.GetPierceFlag());
+		m_ballCollision.SetReflectFlag (false);
 
 		// ブロックを消した数でボールの速さを変える.
 		if (m_deleteCount >= (int)(BlockNum * 0.2f)) {
 			m_ball.SetSpeed(4.0f);
+			m_ball2.SetSpeed(4.0f);
+			m_ball3.SetSpeed(4.0f);
 		}
 		if (m_deleteCount >= (int)(BlockNum * 0.8f)) {
 			m_ball.SetSpeed(6.0f);
+			m_ball2.SetSpeed(6.0f);
+			m_ball3.SetSpeed(6.0f);
 		}
 	}
 }
