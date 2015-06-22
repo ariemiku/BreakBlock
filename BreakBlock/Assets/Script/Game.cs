@@ -41,7 +41,6 @@ class cBar{
 	protected Vector2 position;		// 位置座標.
 	protected int life;				// 命.
 	protected UISprite sprite;		// バー本体.
-	//BarCollision barCollision;
 	protected float speed;
 	protected UILabel label;
 
@@ -304,9 +303,6 @@ class cItem{
 	public virtual bool GetPierceFlag(){
 		return false;
 	}
-	
-	//public virtual void ReflectionEffect(cBar bar,cBall ball){
-	//}
 }
 
 class cItem1 : cItem{
@@ -320,18 +316,6 @@ class cItem1 : cItem{
 		bar.SetInitialize ();
 		bar.Scaling ();
 	}
-	/*
-	public override void ReflectionEffect(cBar bar,cBall ball){
-		if (usingFlag) {
-			usingTime += Time.deltaTime;
-			Debug.Log("in");
-			if(usingTime > 3.0f){
-				bar.SetInitialize ();
-				usingFlag = false;
-				usingTime = 0.0f;
-			}
-		}
-	}*/
 }
 
 class cItem2 : cItem{
@@ -360,8 +344,6 @@ class cItem2 : cItem{
 }
 
 class cItem3 : cItem{
-	protected bool pierceFlag = false;
-	
 	public cItem3(){
 		sprite = GameObject.Find ("UI Root/Panel/Item3").GetComponent<UISprite> ();
 		position = sprite.transform.localPosition;
@@ -369,13 +351,8 @@ class cItem3 : cItem{
 
 	// 一定時間ブロックを貫通する処理.
 	public override void Effect(cBar bar,cBall ball,cBall ball2){
-		pierceFlag = true;
+		bar.SetInitialize ();
 	}
-
-	public override bool GetPierceFlag(){
-		return pierceFlag;
-	}
-	
 }
 
 class cItem4 : cItem{
@@ -407,9 +384,10 @@ public class Game : MonoBehaviour {
 	// 定数
 	public static readonly int BlockNum = 66;	// ブロックの合計数
 
-	//private List<string> m_hitHardBlockList = new List<string> ();
-
 	private UILabel m_lavel;
+
+	private UILabel m_scoreLabel;
+	private int m_score = 0;
 
 	private eStatus m_Status;
 
@@ -436,6 +414,7 @@ public class Game : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		m_lavel = GameObject.Find ("UI Root/Panel/Label").GetComponent<UILabel> ();
+		m_scoreLabel = GameObject.Find ("UI Root/Panel/Score").GetComponent<UILabel> ();
 
 		m_bar = GameObject.Find ("Bar");
 		m_barCollision = m_bar.GetComponent<BarCollision> ();
@@ -559,6 +538,7 @@ public class Game : MonoBehaviour {
 		}
 
 		if (m_barCollision.HitItem()) {
+			m_score+=50;
 			m_usingItem = true;
 			m_item.SetUsingFlag(true);
 			m_item.Effect(m_myBar,m_ball,m_ball2);
@@ -572,7 +552,6 @@ public class Game : MonoBehaviour {
 			m_ballCollision.SetOverFlag();
 		}
 		if (m_ballCollision.Reflect()) {
-			//m_deleteCount = m_ballCollision.DeleteCount();
 			m_deleteCount = m_ballCollision.DeleteCount() + m_ballCollision2.DeleteCount();
 			ManageHit(m_ball,m_ballCollision.HitTagName());
 			m_ballCollision.SetReflectFlag (false);
@@ -591,12 +570,12 @@ public class Game : MonoBehaviour {
 		m_ball2.Move();
 				
 		m_myBar.DrawLabel ();
+		m_scoreLabel.text = "Score:" + m_score.ToString ();
 		m_item.Fall ();
 
-		//m_item.ReflectionEffect (m_myBar,m_ball);
 		// ---------------------------------------------------------
 		// ゲームオーバーへ遷移
-		if (m_ball.GetSpeed()<=0.0f && m_ball2.GetSpeed()<=0.0f){//m_ballCount <= 0) {
+		if (m_ball.GetSpeed()<=0.0f && m_ball2.GetSpeed()<=0.0f){
 			if(m_myBar.GetLife() <= 0){
 				Transit (eStatus.Gameover);
 			}else{
@@ -699,6 +678,7 @@ public class Game : MonoBehaviour {
 			else{
 				ball.Reflect(eReflectCode.UnderWall);
 			}
+			m_score+=20;
 			break;
 		case "BlockUnder":
 			if(m_usingItemCode == eItemCode.Item3 && m_usingItem == true){
@@ -711,6 +691,7 @@ public class Game : MonoBehaviour {
 				m_item.SetPosition(m_ballCollision.BreakBlockPosition());
 				m_item.SetFallFlag(true);
 			}
+			m_score+=20;
 			break;
 		case "BlockRight":
 			if(m_usingItemCode == eItemCode.Item3 && m_usingItem == true){
@@ -718,6 +699,7 @@ public class Game : MonoBehaviour {
 			else{
 				ball.Reflect(eReflectCode.LeftWall);
 			}
+			m_score+=20;
 			break;
 		case "BlockLeft":
 			if(m_usingItemCode == eItemCode.Item3 && m_usingItem == true){
@@ -725,6 +707,7 @@ public class Game : MonoBehaviour {
 			else{
 				ball.Reflect(eReflectCode.RightWall);
 			}
+			m_score+=20;
 			break;
 		}
 
