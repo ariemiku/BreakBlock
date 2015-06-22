@@ -12,7 +12,11 @@ public class BarCollision : MonoBehaviour {
 			m_hitItemFlag = true;
 		}
 
-		if(c.gameObject.tag == "Stage"){
+		if(c.gameObject.tag == "RightWall"){
+			m_hitStageFlag = true;
+		}
+
+		if(c.gameObject.tag == "LeftWall"){
 			m_hitStageFlag = true;
 		}
 	}
@@ -22,7 +26,11 @@ public class BarCollision : MonoBehaviour {
 			m_hitItemFlag = false;
 		}
 
-		if(c.gameObject.tag == "Stage"){
+		if(c.gameObject.tag == "RightWall"){
+			m_hitStageFlag = false;
+		}
+		
+		if(c.gameObject.tag == "LeftWall"){
 			m_hitStageFlag = false;
 		}
 	}

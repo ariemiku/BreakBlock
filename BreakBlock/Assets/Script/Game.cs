@@ -73,14 +73,16 @@ class cBar{
 		// 左が押された場合.
 		case eKeyCode.LeftArrow:
 			moveX = -speed;
-			if(sprite.transform.localPosition.x <= -180){
+			if(sprite.transform.localPosition.x <= -180 ||
+			   sprite.transform.localScale.x == 1.5f && sprite.transform.localPosition.x <= -160 ){
 				return;
 			}
 			break;
 		// 右が押された場合.
 		case eKeyCode.RightArrow:
 			moveX = speed;
-			if(sprite.transform.localPosition.x >= 180){
+			if(sprite.transform.localPosition.x >= 180 ||
+			   sprite.transform.localScale.x == 1.5f && sprite.transform.localPosition.x >= 160 ){
 				return;
 			}
 			break;
@@ -93,6 +95,11 @@ class cBar{
 
 	public void Scaling(){
 		sprite.transform.localScale =  new Vector3(1.5f,sprite.transform.localScale.y,
+		                                           sprite.transform.localScale.z);
+	}
+
+	public void SetScaling(float scalX){
+		sprite.transform.localScale =  new Vector3(scalX,sprite.transform.localScale.y,
 		                                           sprite.transform.localScale.z);
 	}
 
@@ -447,6 +454,7 @@ public class Game : MonoBehaviour {
 
 	private cItem m_item;
 	private eItemCode m_itemCode = eItemCode.None;
+	private eItemCode m_usingItemCode = eItemCode.None;
 	private bool m_usingItem = false;
 	private float usingTime = 0.0f;
 
@@ -484,6 +492,7 @@ public class Game : MonoBehaviour {
 		m_item.SetPosition(new Vector2 (0.0f,-350.0f));
 		m_myBar.SetInitialize ();
 		m_itemCode = eItemCode.None;
+		m_usingItemCode = eItemCode.None;
 		m_usingItem = false;
 
 		Debug.Log ("Tutorial");
@@ -554,6 +563,9 @@ public class Game : MonoBehaviour {
 			if(usingTime >= 5.0f){
 				m_usingItem = false;
 				usingTime = 0.0f;
+				if(m_usingItemCode==eItemCode.Item1){
+					m_myBar.SetScaling(1.0f);
+				}
 			}
 		}
 
@@ -562,6 +574,8 @@ public class Game : MonoBehaviour {
 			m_item.SetUsingFlag(true);
 			m_item.Effect(m_myBar,m_ball,m_ball2);
 			m_item.SetInitializePos();
+			m_usingItemCode = m_itemCode;
+			usingTime = 0.0f;
 		}
 
 		if (m_ballCollision.Over () || m_ball.GetPosition().y <= -400) {
@@ -672,8 +686,6 @@ public class Game : MonoBehaviour {
 			m_itemCode = eItemCode.Item5;
 			break;
 		}
-
-		m_item = new cItem3();
 	}
 
 	void ManageHit(cBall ball, string hitTagName){
@@ -693,12 +705,16 @@ public class Game : MonoBehaviour {
 			ball.Reflect(eReflectCode.Bar);
 			break;
 		case "BlockTop":
-			if(m_itemCode != eItemCode.Item3 && m_usingItem != true){
+			if(m_usingItemCode == eItemCode.Item3 && m_usingItem == true){
+			}
+			else{
 				ball.Reflect(eReflectCode.UnderWall);
 			}
 			break;
 		case "BlockUnder":
-			if(m_itemCode != eItemCode.Item3 && m_usingItem != true){
+			if(m_usingItemCode == eItemCode.Item3 && m_usingItem == true){
+			}
+			else{
 				ball.Reflect(eReflectCode.TopWall);
 			}
 			if(!m_item.CheckMove()){
@@ -708,12 +724,16 @@ public class Game : MonoBehaviour {
 			}
 			break;
 		case "BlockRight":
-			if(m_itemCode != eItemCode.Item3 && m_usingItem != true){
+			if(m_usingItemCode == eItemCode.Item3 && m_usingItem == true){
+			}
+			else{
 				ball.Reflect(eReflectCode.LeftWall);
 			}
 			break;
 		case "BlockLeft":
-			if(m_itemCode != eItemCode.Item3 && m_usingItem != true){
+			if(m_usingItemCode == eItemCode.Item3 && m_usingItem == true){
+			}
+			else{
 				ball.Reflect(eReflectCode.RightWall);
 			}
 			break;
