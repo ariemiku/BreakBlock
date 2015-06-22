@@ -237,33 +237,6 @@ class cBall{
 	// 速度を変更する関数.
 }
 
-class cBlock{
-	// ブロックがあるかないか.
-	//protected UISprite sprite;			// ブロック本体.
-	//protected Vector2 position;			// ブロックの位置座標.
-	// アイテムを持つかどうか.
-	// 何回当たれば消えるのか.
-
-	// 引数有のコンストラクタ.
-	public cBlock(/*int num*/){
-		//sprite = GameObject.Find ("UI Root/Panel/BlockList/Block"+num).GetComponent<UISprite> ();
-		//position = new Vector2(sprite.transform.localPosition.x,sprite.transform.localPosition.y);
-	}
-
-	// ブロックが当たった時の処理.
-
-	// UISpriteを取得する関数
-	//public UISprite GetSprite(){
-	//	return sprite;
-	//}
-	public bool CheckDelete(GameObject gameobject){
-		//UISprite sprite = gameobject.GetComponent<UISprite> ();
-
-
-		return true;
-	}
-}
-
 class cItem{
 	public static readonly int UnderPositionY = -350;
 	protected Vector2 position;				// アイテムの位置座標.
@@ -459,7 +432,6 @@ public class Game : MonoBehaviour {
 	private float usingTime = 0.0f;
 
 	private int m_deleteCount = 0;
-	private int m_ballCount=1;
 
 	// Use this for initialization
 	void Start () {
@@ -480,13 +452,13 @@ public class Game : MonoBehaviour {
 		m_item = new cItem ();
 		m_Status = eStatus.Tutorial;
 
+		StageManager.GetInstance ().Transit (StageManager.eStage.Stage1);
 		Transit (m_Status);
 	}
 
 	void StartTutorial(eStatus PrevStatus){
 		// 代わった時に1回しかやらないことをする.
 		m_ball.SetPosition (new Vector2 (m_myBar.GetPosition().x+5.0f,m_myBar.GetPosition().y+20.0f));
-		m_ballCount = 1;
 		m_ball = new cBall ();
 		m_ball2 = new cBall ("UI Root/Panel/Ball2");
 		m_item.SetPosition(new Vector2 (0.0f,-350.0f));
@@ -515,6 +487,23 @@ public class Game : MonoBehaviour {
 		// 代わった時に1回しかやらないことをする.
 		Debug.Log ("GameClear");
 		m_lavel.text = "GameClear";
+
+		if(StageManager.GetInstance ().CheckLastStage ()){
+			Application.LoadLevel("Contribute");
+		}
+
+		m_deleteCount = 0;
+		m_ballCollision.SetDeleteCount ();
+		m_ballCollision2.SetDeleteCount ();
+		m_myBar.SetInitialize ();
+		m_ball.SetPosition (new Vector2 (m_myBar.GetPosition().x+5.0f,m_myBar.GetPosition().y+20.0f));
+		m_ball = new cBall ();
+		m_ball2 = new cBall ("UI Root/Panel/Ball2");
+		m_item.SetPosition(new Vector2 (0.0f,-350.0f));
+		m_itemCode = eItemCode.None;
+		m_usingItemCode = eItemCode.None;
+		m_usingItem = false;
+		StageManager.GetInstance ().SetNextStage ();
 	}
 	
 	// Update is called once per frame
@@ -632,10 +621,10 @@ public class Game : MonoBehaviour {
 
 	// gameClear状態の更新関数.
 	void UpdateGameClear(){
-		// Spaceキーで投稿画面に切り替える.
-		if(Input.GetKeyDown(KeyCode.Space))
+		// Enterキーで投稿画面に切り替える.
+		if(Input.GetKeyDown(KeyCode.Return))
 		{
-			Application.LoadLevel("Contribute");
+			Transit (eStatus.Play);
 		}
 	}
 	

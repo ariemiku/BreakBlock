@@ -12,19 +12,6 @@ public class BallCollision : MonoBehaviour {
 	void OnTriggerEnter2D(Collider2D c){
 		m_reflectFlag = true;
 
-		// 壁にぶつかったら反射を行う.
-		if (c.gameObject.tag == "RightWall") {
-			m_hitTagName = "RightWall";
-		}
-		if (c.gameObject.tag == "LeftWall") {
-			m_hitTagName = "LeftWall";
-		}
-		if (c.gameObject.tag == "TopWall") {
-			m_hitTagName = "TopWall";
-		}
-		if (c.gameObject.tag == "Bar") {
-			m_hitTagName = "Bar";
-		}	
 		
 		// ブロックに衝突した場合
 		if (c.gameObject.tag == "BlockTop") {
@@ -59,6 +46,21 @@ public class BallCollision : MonoBehaviour {
 			// 衝突したブロック自体（親）を消す
 			Destroy(c.gameObject.transform.parent.gameObject);
 		}
+
+
+		// 壁にぶつかったら反射を行う.
+		if (c.gameObject.tag == "RightWall") {
+			m_hitTagName = "RightWall";
+		}
+		if (c.gameObject.tag == "LeftWall") {
+			m_hitTagName = "LeftWall";
+		}
+		if (c.gameObject.tag == "TopWall") {
+			m_hitTagName = "TopWall";
+		}
+		if (c.gameObject.tag == "Bar") {
+			m_hitTagName = "Bar";
+		}	
 	}
 
 	void OnTriggerExit2D(Collider2D c){
@@ -94,5 +96,9 @@ public class BallCollision : MonoBehaviour {
 
 	public int DeleteCount(){
 		return m_deleteCount;
+	}
+
+	public void SetDeleteCount(int num=0){
+		m_deleteCount = num;
 	}
 }
