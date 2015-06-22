@@ -27,6 +27,15 @@ enum eReflectCode{
 	Bar,
 };
 
+enum eItemCode{
+	Item1,
+	Item2,
+	Item3,
+	Item4,
+	Item5,
+	None,
+};
+
 class cBar{
 	public static readonly float InitializeSpeed = 3.0f;
 	protected Vector2 position;		// 位置座標.
@@ -116,7 +125,7 @@ class cBar{
 
 class cBall{
 	protected float speed;			// ボールの速度.
-	// 位置座標.
+	protected Vector2 position;		// 位置座標.
 	protected UISprite sprite;		// ボール本体.
 	protected float rotation;
 
@@ -125,6 +134,7 @@ class cBall{
 		// 初期設定としてボールの向きを傾けておく.
 		rotation = -45.0f;
 		sprite.transform.rotation = Quaternion.AngleAxis (rotation,Vector3.forward);
+		position = new Vector2 (sprite.transform.localPosition.x,sprite.transform.localPosition.y);
 		// 仮の初期値.
 		speed = 3.0f;
 	}
@@ -134,12 +144,15 @@ class cBall{
 		// 初期設定としてボールの向きを傾けておく.
 		rotation = -45.0f;
 		sprite.transform.rotation = Quaternion.AngleAxis (rotation,Vector3.forward);
+		sprite.transform.localPosition = new Vector3(50.0f,-400.0f,0.0f);
+		position = new Vector2 (sprite.transform.localPosition.x,sprite.transform.localPosition.y);
 		// 仮の初期値.
-		speed = 3.0f;
+		speed = 0.0f;
 	}
 	
 	// 位置を設定する関数.
-	public void SetPosition(Vector2 position){
+	public void SetPosition(Vector2 pos){
+		position = pos;
 		sprite.transform.localPosition = new Vector3(position.x,position.y,0.0f);
 	}
 
@@ -193,17 +206,26 @@ class cBall{
 		SetPosition (pos);
 	}
 
-	public void Scaling(){
-		sprite.transform.localScale =  new Vector3(1.5f,1.5f,sprite.transform.localScale.z);
+	public float GetLotation(){
+		return rotation;
+	}
+
+	public void SetLotation(float revisedRotation){
+		rotation = revisedRotation;
+		sprite.transform.rotation = Quaternion.AngleAxis (rotation,Vector3.forward);
 	}
 
 	public Vector2 GetPosition(){
-		return sprite.transform.localPosition;
+		return position;
 	}
 	
 	// 速度を設定する関数.
 	public void SetSpeed(float revisedSpeed){
 		speed = revisedSpeed;
+	}
+
+	public float GetSpeed(){
+		return speed;
 	}
 	// 速度を変更する関数.
 }
@@ -244,12 +266,13 @@ class cItem{
 	protected float effectTime;
 	protected bool usingFlag = false;
 	protected float usingTime = 0.0f;
-	protected bool pierceFlag = false;
+
 
 	public cItem(){
-		position = new Vector2 (0.0f,0.0f);
+		position = new Vector2 (0.0f,-350.0f);
 		sprite = GameObject.Find ("UI Root/Panel/Item1").GetComponent<UISprite> ();
-		position = sprite.transform.localPosition;
+		position.x = sprite.transform.localPosition.x;
+		sprite.transform.localPosition = position;
 		speed = 1.5f;
 		fallFlag = false;
 		effectTime = 10.0f;
@@ -291,15 +314,15 @@ class cItem{
 	}
 
 	// アイテムの効果反映を行う関数.
-	public virtual void Effect(cBar bar,cBall ball,cBall ball2,cBall ball3){
+	public virtual void Effect(cBar bar,cBall ball,cBall ball2){
 	}
 
 	public void SetUsingFlag(bool flag = false){
 		usingFlag = flag;
 	}
 
-	public bool GetPierceFlag(){
-		return pierceFlag;
+	public virtual bool GetPierceFlag(){
+		return false;
 	}
 	
 	//public virtual void ReflectionEffect(cBar bar,cBall ball){
@@ -313,7 +336,7 @@ class cItem1 : cItem{
 	}
 
 	// バーを伸ばす処理.
-	public override void Effect(cBar bar,cBall ball,cBall ball2,cBall ball3){
+	public override void Effect(cBar bar,cBall ball,cBall ball2){
 		bar.SetInitialize ();
 		bar.Scaling ();
 	}
@@ -337,24 +360,42 @@ class cItem2 : cItem{
 		position = sprite.transform.localPosition;
 	}
 
-	// ボールを3つにする処理.
-	public override void Effect(cBar bar,cBall ball,cBall ball2,cBall ball3){
-		ball2.SetPosition (ball.GetPosition());
-		ball3.SetPosition (ball.GetPosition());
+	// ボールを2つにする処理.
+	public override void Effect(cBar bar,cBall ball,cBall ball2){
+		if (ball2.GetSpeed () <= 0.0f) {
+			ball2.SetPosition (ball.GetPosition ());
+			ball2.SetLotation (ball.GetLotation () + 90.0f);
+
+			ball2.SetSpeed (ball.GetSpeed ());
+		}
+
+		if (ball.GetSpeed () <= 0.0f) {
+			ball.SetPosition (ball2.GetPosition ());
+			ball.SetLotation (ball2.GetLotation () + 90.0f);
+			
+			ball.SetSpeed (ball2.GetSpeed ());
+		}
 	}
 
 }
 
 class cItem3 : cItem{
+	protected bool pierceFlag = false;
+	
 	public cItem3(){
 		sprite = GameObject.Find ("UI Root/Panel/Item3").GetComponent<UISprite> ();
 		position = sprite.transform.localPosition;
 	}
 
 	// 一定時間ブロックを貫通する処理.
-	public override void Effect(cBar bar,cBall ball,cBall ball2,cBall ball3){
-		pierceFlag = true;	
+	public override void Effect(cBar bar,cBall ball,cBall ball2){
+		pierceFlag = true;
 	}
+
+	public override bool GetPierceFlag(){
+		return pierceFlag;
+	}
+	
 }
 
 class cItem4 : cItem{
@@ -364,7 +405,7 @@ class cItem4 : cItem{
 	}
 
 	// バーの移動速度を上げる処理
-	public override void Effect(cBar bar,cBall ball,cBall ball2,cBall ball3){
+	public override void Effect(cBar bar,cBall ball,cBall ball2){
 		bar.SetInitialize ();
 		bar.UpSpeed ();
 	}
@@ -377,7 +418,7 @@ class cItem5 : cItem{
 	}
 
 	// 命を増やす処理
-	public override void Effect(cBar bar,cBall ball,cBall ball2,cBall ball3){
+	public override void Effect(cBar bar,cBall ball,cBall ball2){
 		bar.AddLife ();
 	}
 }
@@ -401,10 +442,13 @@ public class Game : MonoBehaviour {
 	private BallCollision m_ballCollision;
 
 	private cBall m_ball2;
-	private cBall m_ball3;
-
+	private GameObject m_ballGameObject2;
+	private BallCollision m_ballCollision2;
 
 	private cItem m_item;
+	private eItemCode m_itemCode = eItemCode.None;
+	private bool m_usingItem = false;
+	private float usingTime = 0.0f;
 
 	private int m_deleteCount = 0;
 	private int m_ballCount=1;
@@ -422,7 +466,8 @@ public class Game : MonoBehaviour {
 		m_ballCollision = m_ballGameObject.GetComponent<BallCollision> ();
 
 		m_ball2 = new cBall ("UI Root/Panel/Ball2");
-		m_ball3 = new cBall ("UI Root/Panel/Ball3");
+		m_ballGameObject2 = GameObject.Find ("Ball2");
+		m_ballCollision2 = m_ballGameObject2.GetComponent<BallCollision> ();
 
 		m_item = new cItem ();
 		m_Status = eStatus.Tutorial;
@@ -435,6 +480,12 @@ public class Game : MonoBehaviour {
 		m_ball.SetPosition (new Vector2 (m_myBar.GetPosition().x+5.0f,m_myBar.GetPosition().y+20.0f));
 		m_ballCount = 1;
 		m_ball = new cBall ();
+		m_ball2 = new cBall ("UI Root/Panel/Ball2");
+		m_item.SetPosition(new Vector2 (0.0f,-350.0f));
+		m_myBar.SetInitialize ();
+		m_itemCode = eItemCode.None;
+		m_usingItem = false;
+
 		Debug.Log ("Tutorial");
 		m_lavel.text = "Tutorial";
 	}
@@ -497,22 +548,44 @@ public class Game : MonoBehaviour {
 			}
 		}
 
+		if (m_usingItem == true) {
+			usingTime += Time.deltaTime;
+
+			if(usingTime >= 5.0f){
+				m_usingItem = false;
+				usingTime = 0.0f;
+			}
+		}
+
 		if (m_barCollision.HitItem()) {
+			m_usingItem = true;
 			m_item.SetUsingFlag(true);
-			m_item.Effect(m_myBar,m_ball,m_ball2,m_ball3);
+			m_item.Effect(m_myBar,m_ball,m_ball2);
 			m_item.SetInitializePos();
 		}
 
-		if (m_ballCollision.Over ()) {
+		if (m_ballCollision.Over () || m_ball.GetPosition().y <= -400) {
 			m_ball.SetSpeed(0.0f);
-			m_ballCount-=1;
 			m_ballCollision.SetOverFlag();
 		}
 		if (m_ballCollision.Reflect()) {
-			m_deleteCount = m_ballCollision.DeleteCount();
+			//m_deleteCount = m_ballCollision.DeleteCount();
+			m_deleteCount = m_ballCollision.DeleteCount() + m_ballCollision2.DeleteCount();
 			ManageHit(m_ball,m_ballCollision.HitTagName());
+			m_ballCollision.SetReflectFlag (false);
 		}
 		m_ball.Move();
+
+		if (m_ballCollision2.Reflect()) {
+			m_deleteCount = m_ballCollision.DeleteCount() + m_ballCollision2.DeleteCount();
+			ManageHit(m_ball2,m_ballCollision2.HitTagName());
+			m_ballCollision2.SetReflectFlag (false);
+		}
+		if (m_ballCollision2.Over () || m_ball2.GetPosition().y <= -400) {
+			m_ball2.SetSpeed(0.0f);
+			m_ballCollision2.SetOverFlag();
+		}
+		m_ball2.Move();
 				
 		m_myBar.DrawLabel ();
 		m_item.Fall ();
@@ -520,8 +593,7 @@ public class Game : MonoBehaviour {
 		//m_item.ReflectionEffect (m_myBar,m_ball);
 		// ---------------------------------------------------------
 		// ゲームオーバーへ遷移
-		if (m_ballCount <= 0) {
-			Debug.Log(m_myBar.GetLife());
+		if (m_ball.GetSpeed()<=0.0f && m_ball2.GetSpeed()<=0.0f){//m_ballCount <= 0) {
 			if(m_myBar.GetLife() <= 0){
 				Transit (eStatus.Gameover);
 			}else{
@@ -581,20 +653,27 @@ public class Game : MonoBehaviour {
 		switch (randomNum) {
 		case 1:
 			m_item = new cItem1();
+			m_itemCode = eItemCode.Item1;
 			break;
 		case 2:
 			m_item = new cItem2();
+			m_itemCode = eItemCode.Item2;
 			break;
 		case 3:
 			m_item = new cItem3();
+			m_itemCode = eItemCode.Item3;
 			break;
 		case 4:
 			m_item = new cItem4();
+			m_itemCode = eItemCode.Item4;
 			break;
 		case 5:
 			m_item = new cItem5();
+			m_itemCode = eItemCode.Item5;
 			break;
 		}
+
+		m_item = new cItem3();
 	}
 
 	void ManageHit(cBall ball, string hitTagName){
@@ -611,15 +690,15 @@ public class Game : MonoBehaviour {
 			ball.Reflect(eReflectCode.TopWall);
 			break;
 		case "Bar":
-			m_ball.Reflect(eReflectCode.Bar);
+			ball.Reflect(eReflectCode.Bar);
 			break;
 		case "BlockTop":
-			if(!m_item.GetPierceFlag()){
+			if(m_itemCode != eItemCode.Item3 && m_usingItem != true){
 				ball.Reflect(eReflectCode.UnderWall);
 			}
 			break;
 		case "BlockUnder":
-			if(!m_item.GetPierceFlag()){
+			if(m_itemCode != eItemCode.Item3 && m_usingItem != true){
 				ball.Reflect(eReflectCode.TopWall);
 			}
 			if(!m_item.CheckMove()){
@@ -629,29 +708,29 @@ public class Game : MonoBehaviour {
 			}
 			break;
 		case "BlockRight":
-			if(!m_item.GetPierceFlag()){
+			if(m_itemCode != eItemCode.Item3 && m_usingItem != true){
 				ball.Reflect(eReflectCode.LeftWall);
 			}
 			break;
 		case "BlockLeft":
-			if(!m_item.GetPierceFlag()){
+			if(m_itemCode != eItemCode.Item3 && m_usingItem != true){
 				ball.Reflect(eReflectCode.RightWall);
 			}
 			break;
 		}
-		Debug.Log (m_item.GetPierceFlag());
-		m_ballCollision.SetReflectFlag (false);
 
 		// ブロックを消した数でボールの速さを変える.
 		if (m_deleteCount >= (int)(BlockNum * 0.2f)) {
 			m_ball.SetSpeed(4.0f);
-			m_ball2.SetSpeed(4.0f);
-			m_ball3.SetSpeed(4.0f);
+			if(m_ball2.GetSpeed()!=0.0f){
+				m_ball2.SetSpeed(4.0f);
+			}
 		}
 		if (m_deleteCount >= (int)(BlockNum * 0.8f)) {
 			m_ball.SetSpeed(6.0f);
-			m_ball2.SetSpeed(6.0f);
-			m_ball3.SetSpeed(6.0f);
+			if(m_ball2.GetSpeed()!=0.0f){
+				m_ball2.SetSpeed(6.0f);
+			}
 		}
 	}
 }
