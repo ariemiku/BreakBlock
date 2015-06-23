@@ -4,6 +4,7 @@ using System.Collections;
 public class TopScore : MonoBehaviour {
 	public static int m_topScore = 1000;
 	public static string m_name = "one";
+	public static string m_comment = "comment";
 	public static bool m_newFlag = false;
 
 	// トップスコアを取得する関数.
@@ -14,6 +15,10 @@ public class TopScore : MonoBehaviour {
 	// 名前を取得する関数.
 	public static string GetTopName(){
 		return m_name;
+	}
+
+	public static string GetComment(){
+		return m_comment;
 	}
 
 	// 過去のスコアを超えたかどうか返す関数.
