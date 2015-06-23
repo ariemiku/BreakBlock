@@ -92,22 +92,19 @@ class cBar{
 		SetPosition (position.x);
 	}
 
-	public void Scaling(){
-		sprite.transform.localScale =  new Vector3(1.5f,sprite.transform.localScale.y,
-		                                           sprite.transform.localScale.z);
-	}
-
+	// バーの大きさを変更する関数.
 	public void SetScaling(float scalX){
 		sprite.transform.localScale =  new Vector3(scalX,sprite.transform.localScale.y,
 		                                           sprite.transform.localScale.z);
 	}
 
+	// バーのステータスをもとに戻す関数.
 	public void SetInitialize(){
 		sprite.transform.localScale = new Vector3(1.0f,sprite.transform.localScale.y,
 		                                         sprite.transform.localScale.z);
 		speed = InitializeSpeed;
 	}
-
+	
 	public void UpSpeed(){
 		speed = InitializeSpeed * 2;
 	}
@@ -116,6 +113,7 @@ class cBar{
 		label.text = "Life:" + life.ToString ();
 	}
 
+	// 命を増やす関数.
 	public void AddLife(){
 		life += 1;
 	}
@@ -124,6 +122,7 @@ class cBar{
 		life -= 1;
 	}
 
+	// 命を取得する関数.
 	public int GetLife(){
 		return life;
 	}
@@ -314,7 +313,7 @@ class cItem1 : cItem{
 	// バーを伸ばす処理.
 	public override void Effect(cBar bar,cBall ball,cBall ball2){
 		bar.SetInitialize ();
-		bar.Scaling ();
+		bar.SetScaling (1.5f);
 	}
 }
 
@@ -468,6 +467,10 @@ public class Game : MonoBehaviour {
 		m_lavel.text = "GameClear";
 
 		if(StageManager.GetInstance ().CheckLastStage ()){
+			if(TopScore.GetTopScore() < m_score){
+				TopScore.m_topScore = m_score;
+				TopScore.m_newFlag = true;
+			}
 			Application.LoadLevel("Contribute");
 		}
 
@@ -577,6 +580,12 @@ public class Game : MonoBehaviour {
 		// ゲームオーバーへ遷移
 		if (m_ball.GetSpeed()<=0.0f && m_ball2.GetSpeed()<=0.0f){
 			if(m_myBar.GetLife() <= 0){
+				// スコアがトップより高かったら投稿画面に遷移する.
+				if(TopScore.GetTopScore() < m_score){
+					TopScore.m_topScore = m_score;
+					TopScore.m_newFlag = true;
+					Application.LoadLevel("Contribute");
+				}
 				Transit (eStatus.Gameover);
 			}else{
 				m_myBar.SubtractionLife();
@@ -600,7 +609,7 @@ public class Game : MonoBehaviour {
 
 	// gameClear状態の更新関数.
 	void UpdateGameClear(){
-		// Enterキーで投稿画面に切り替える.
+		// Enterキーで切り替える.
 		if(Input.GetKeyDown(KeyCode.Return))
 		{
 			Transit (eStatus.Play);
