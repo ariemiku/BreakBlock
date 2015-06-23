@@ -10,6 +10,7 @@ public enum eStatus{
 	Play,
 	Gameover,
 	GameClear,
+	GameComplete,
 };
 
 // 使用するキー.
@@ -19,6 +20,7 @@ enum eKeyCode{
 	None,
 };
 
+// 跳ね返る壁.
 enum eReflectCode{
 	RightWall,
 	LeftWall,
@@ -27,6 +29,7 @@ enum eReflectCode{
 	Bar,
 };
 
+// アイテム.
 enum eItemCode{
 	Item1,
 	Item2,
@@ -72,8 +75,8 @@ class cBar{
 		// 左が押された場合.
 		case eKeyCode.LeftArrow:
 			moveX = -speed;
-			if(sprite.transform.localPosition.x <= -180 ||
-			   sprite.transform.localScale.x == 1.5f && sprite.transform.localPosition.x <= -160 ){
+			if(sprite.transform.localPosition.x <= -180.0f ||
+			   sprite.transform.localScale.x == 1.5f && sprite.transform.localPosition.x <= -160.0f ){
 				return;
 			}
 			break;
@@ -81,7 +84,7 @@ class cBar{
 		case eKeyCode.RightArrow:
 			moveX = speed;
 			if(sprite.transform.localPosition.x >= 180 ||
-			   sprite.transform.localScale.x == 1.5f && sprite.transform.localPosition.x >= 160 ){
+			   sprite.transform.localScale.x == 1.5f && sprite.transform.localPosition.x >= 160.0f ){
 				return;
 			}
 			break;
@@ -96,6 +99,21 @@ class cBar{
 	public void SetScaling(float scalX){
 		sprite.transform.localScale =  new Vector3(scalX,sprite.transform.localScale.y,
 		                                           sprite.transform.localScale.z);
+		CheckOver (scalX);
+	}
+
+	// バーの大きさを変更した時はみ出さないようにする関数.
+	void CheckOver(float scalX){
+		if (scalX == 1.5f) {
+			if (sprite.transform.localPosition.x > 160.0f) {
+				position.x=160.0f;
+				sprite.transform.localPosition = new Vector3(position.x,position.y,0.0f);
+			}
+			else if(sprite.transform.localPosition.x < -160.0f){
+				position.x=-160.0f;
+				sprite.transform.localPosition = new Vector3(position.x,position.y,0.0f);
+			}
+		}
 	}
 
 	// バーのステータスをもとに戻す関数.
@@ -104,11 +122,13 @@ class cBar{
 		                                         sprite.transform.localScale.z);
 		speed = InitializeSpeed;
 	}
-	
+
+	// スピードをアップさせる関数.
 	public void UpSpeed(){
 		speed = InitializeSpeed * 2;
 	}
 
+	// 残りの命を描画する関数.
 	public void DrawLabel(){
 		label.text = "Life:" + life.ToString ();
 	}
@@ -204,22 +224,49 @@ class cBall{
 		move.x = sprite.transform.up.x * speed;
 		move.y = sprite.transform.up.y * speed;
 
-		// 自身の向きに移動
-		pos.x += move.x;
-		pos.y += move.y;
+		// 自身の向きに移動.
+		if (NotFrameOver (pos)) {
+			pos.x += move.x;
+			pos.y += move.y;
 
-		SetPosition (pos);
+			SetPosition (pos);
+		}
+	}
+	
+	bool NotFrameOver(Vector2 pos){
+		if (pos.x < -213.0f) {
+			Reflect(eReflectCode.LeftWall);
+			pos.x=-212.0f;
+			SetPosition (pos);
+			return false;
+		}
+		if (pos.x > 213.0f){
+			Reflect(eReflectCode.RightWall);
+			pos.x=212.0f;
+			SetPosition (pos);
+			return false;
+		}
+		if(pos.y > 313.0f){
+			Reflect(eReflectCode.TopWall);
+			pos.y=313.0f;
+			SetPosition (pos);
+			return false;
+		}
+		return true;
 	}
 
+	// ボールの傾きを取得する関数.
 	public float GetLotation(){
 		return rotation;
 	}
 
+	// ボールの傾きをセットする関数.
 	public void SetLotation(float revisedRotation){
 		rotation = revisedRotation;
 		sprite.transform.rotation = Quaternion.AngleAxis (rotation,Vector3.forward);
 	}
 
+	// 位置を取得する関数.
 	public Vector2 GetPosition(){
 		return position;
 	}
@@ -229,10 +276,10 @@ class cBall{
 		speed = revisedSpeed;
 	}
 
+	// 速度を取得する関数.
 	public float GetSpeed(){
 		return speed;
 	}
-	// 速度を変更する関数.
 }
 
 class cItem{
@@ -256,16 +303,19 @@ class cItem{
 		effectTime = 10.0f;
 	}
 
+	// アイテムの位置の初期化を行う関数.
 	public void SetInitializePos(){
 		position.y = UnderPositionY;
 		sprite.transform.localPosition = position;
 	}
 
+	// 位置を設定する関数.
 	public void SetPosition(Vector2 pos){
 		position = pos;
 		sprite.transform.localPosition = position;
 	}
 
+	// 落下フラグを設定する関数.
 	public void SetFallFlag(bool flag = false){
 		fallFlag = flag;
 	}
@@ -295,15 +345,13 @@ class cItem{
 	public virtual void Effect(cBar bar,cBall ball,cBall ball2){
 	}
 
+	// アイテムが取得されているかどうか設定する関数.
 	public void SetUsingFlag(bool flag = false){
 		usingFlag = flag;
 	}
-
-	public virtual bool GetPierceFlag(){
-		return false;
-	}
 }
 
+// バーを伸ばすアイテム
 class cItem1 : cItem{
 	public cItem1(){
 		sprite = GameObject.Find ("UI Root/Panel/Item1").GetComponent<UISprite> ();
@@ -317,6 +365,7 @@ class cItem1 : cItem{
 	}
 }
 
+// ボールを2つにするアイテム
 class cItem2 : cItem{
 	public cItem2(){
 		sprite = GameObject.Find ("UI Root/Panel/Item2").GetComponent<UISprite> ();
@@ -342,6 +391,7 @@ class cItem2 : cItem{
 
 }
 
+// 一定時間ブロックを貫通するアイテム
 class cItem3 : cItem{
 	public cItem3(){
 		sprite = GameObject.Find ("UI Root/Panel/Item3").GetComponent<UISprite> ();
@@ -354,6 +404,7 @@ class cItem3 : cItem{
 	}
 }
 
+// バーの移動速度を上げるアイテム
 class cItem4 : cItem{
 	public cItem4(){
 		sprite = GameObject.Find ("UI Root/Panel/Item4").GetComponent<UISprite> ();
@@ -367,6 +418,7 @@ class cItem4 : cItem{
 	}
 }
 
+// 命を増やすアイテム
 class cItem5 : cItem{
 	public cItem5(){
 		sprite = GameObject.Find ("UI Root/Panel/Item5").GetComponent<UISprite> ();
@@ -384,6 +436,8 @@ public class Game : MonoBehaviour {
 	public static readonly int BlockNum = 66;	// ブロックの合計数
 
 	private UILabel m_lavel;
+
+	private UILabel m_descriptionLabel;
 
 	private UILabel m_scoreLabel;
 	private int m_score = 0;
@@ -414,6 +468,8 @@ public class Game : MonoBehaviour {
 	void Start () {
 		m_lavel = GameObject.Find ("UI Root/Panel/Label").GetComponent<UILabel> ();
 		m_scoreLabel = GameObject.Find ("UI Root/Panel/Score").GetComponent<UILabel> ();
+		m_descriptionLabel = GameObject.Find ("UI Root/Panel/Description").GetComponent<UILabel> ();
+		m_descriptionLabel.transform.localPosition = new Vector3 (0.0f,-10.0f,0.0f);
 
 		m_bar = GameObject.Find ("Bar");
 		m_barCollision = m_bar.GetComponent<BarCollision> ();
@@ -446,34 +502,29 @@ public class Game : MonoBehaviour {
 		m_usingItem = false;
 
 		Debug.Log ("Tutorial");
-		m_lavel.text = "Tutorial";
+		m_lavel.text = "Stage "+StageManager.m_stageNum;
 	}
 	
 	void StartPlay(eStatus PrevStatus){
 		// 代わった時に1回しかやらないことをする.
 		Debug.Log ("Play");
-		m_lavel.text = "Game";
+		m_lavel.text = "Stage "+StageManager.m_stageNum;
 	}
 	
 	void StartGameover(eStatus PrevStatus){
 		// 代わった時に1回しかやらないことをする.
 		Debug.Log ("Gameover");
-		m_lavel.text = "Gameover";
+		m_descriptionLabel.transform.localPosition = new Vector3 (0.0f,-10.0f,0.0f);
+		m_descriptionLabel.text = "Gameover\npush Enter";
+		m_lavel.text = "Stage "+StageManager.m_stageNum;
 	}
 
 	void StartGameClear(eStatus PrevStatus){
 		// 代わった時に1回しかやらないことをする.
-		Debug.Log ("GameClear");
-		m_lavel.text = "GameClear";
-
 		if(StageManager.GetInstance ().CheckLastStage ()){
-			if(TopScore.GetTopScore() < m_score){
-				TopScore.m_topScore = m_score;
-				TopScore.m_newFlag = true;
-			}
-			Application.LoadLevel("Contribute");
+			Transit (eStatus.GameComplete);
 		}
-
+		Debug.Log ("GameClear");
 		m_deleteCount = 0;
 		m_ballCollision.SetDeleteCount ();
 		m_ballCollision2.SetDeleteCount ();
@@ -486,6 +537,15 @@ public class Game : MonoBehaviour {
 		m_usingItemCode = eItemCode.None;
 		m_usingItem = false;
 		StageManager.GetInstance ().SetNextStage ();
+		m_lavel.text = "Stage "+StageManager.m_stageNum;
+	}
+
+	void StartGameComplete(eStatus PrevStatus){
+		// 代わった時に1回しかやらないことをする.
+		Debug.Log ("GameComplete");
+		m_descriptionLabel.transform.localPosition = new Vector3 (0.0f,-10.0f,0.0f);
+		m_descriptionLabel.text = "GameComplete\npush Enter";
+		m_lavel.text = "Stage "+StageManager.m_stageNum;
 	}
 	
 	// Update is called once per frame
@@ -503,6 +563,9 @@ public class Game : MonoBehaviour {
 		case eStatus.GameClear:
 			UpdateGameClear ();
 			break;
+		case eStatus.GameComplete:
+			UpdateGameComplete ();
+			break;
 		}
 	}
 
@@ -511,6 +574,7 @@ public class Game : MonoBehaviour {
 		// enterキーでゲームに遷移する.
 		if (Input.GetKeyDown (KeyCode.Return)) {
 			Transit (eStatus.Play);
+			m_descriptionLabel.transform.localPosition = new Vector3 (0.0f,-550.0f,0.0f);
 		}
 	}
 	
@@ -528,6 +592,7 @@ public class Game : MonoBehaviour {
 			}
 		}
 
+		// アイテム取得時一定時間効果が表れる処理.
 		if (m_usingItem == true) {
 			usingTime += Time.deltaTime;
 
@@ -540,6 +605,7 @@ public class Game : MonoBehaviour {
 			}
 		}
 
+		// アイテムを取得した時の処理
 		if (m_barCollision.HitItem()) {
 			m_score+=50;
 			m_usingItem = true;
@@ -550,28 +616,9 @@ public class Game : MonoBehaviour {
 			usingTime = 0.0f;
 		}
 
-		if (m_ballCollision.Over () || m_ball.GetPosition().y <= -400) {
-			m_ball.SetSpeed(0.0f);
-			m_ballCollision.SetOverFlag();
-		}
-		if (m_ballCollision.Reflect()) {
-			m_deleteCount = m_ballCollision.DeleteCount() + m_ballCollision2.DeleteCount();
-			ManageHit(m_ball,m_ballCollision.HitTagName());
-			m_ballCollision.SetReflectFlag (false);
-		}
-		m_ball.Move();
+		MoveBall (m_ball,m_ballCollision);
+		MoveBall (m_ball2,m_ballCollision2);
 
-		if (m_ballCollision2.Reflect()) {
-			m_deleteCount = m_ballCollision.DeleteCount() + m_ballCollision2.DeleteCount();
-			ManageHit(m_ball2,m_ballCollision2.HitTagName());
-			m_ballCollision2.SetReflectFlag (false);
-		}
-		if (m_ballCollision2.Over () || m_ball2.GetPosition().y <= -400) {
-			m_ball2.SetSpeed(0.0f);
-			m_ballCollision2.SetOverFlag();
-		}
-		m_ball2.Move();
-				
 		m_myBar.DrawLabel ();
 		m_scoreLabel.text = "Score:" + m_score.ToString ();
 		m_item.Fall ();
@@ -580,12 +627,6 @@ public class Game : MonoBehaviour {
 		// ゲームオーバーへ遷移
 		if (m_ball.GetSpeed()<=0.0f && m_ball2.GetSpeed()<=0.0f){
 			if(m_myBar.GetLife() <= 0){
-				// スコアがトップより高かったら投稿画面に遷移する.
-				if(TopScore.GetTopScore() < m_score){
-					TopScore.m_topScore = m_score;
-					TopScore.m_newFlag = true;
-					Application.LoadLevel("Contribute");
-				}
 				Transit (eStatus.Gameover);
 			}else{
 				m_myBar.SubtractionLife();
@@ -596,6 +637,7 @@ public class Game : MonoBehaviour {
 		if (m_deleteCount >= BlockNum) {
 			Transit (eStatus.GameClear);
 		}
+		// ---------------------------------------------------------
 	}
 	
 	// gameover状態の更新関数.
@@ -603,7 +645,15 @@ public class Game : MonoBehaviour {
 		// enterキーでタイトルに切り替える.
 		if(Input.GetKeyDown(KeyCode.Return))
 		{
-			Application.LoadLevel("Title");
+			// スコアがトップより高かったら投稿画面に遷移する.
+			if(TopScore.GetTopScore() < m_score){
+				TopScore.m_topScore = m_score;
+				TopScore.m_newFlag = true;
+				Application.LoadLevel("Contribute");
+			}
+			else{
+				Application.LoadLevel("Title");
+			}
 		}
 	}
 
@@ -613,6 +663,17 @@ public class Game : MonoBehaviour {
 		if(Input.GetKeyDown(KeyCode.Return))
 		{
 			Transit (eStatus.Play);
+		}
+	}
+
+	void UpdateGameComplete(){
+		// enterキーで遷移する.
+		if (Input.GetKeyDown (KeyCode.Return)) {
+			if(TopScore.GetTopScore() < m_score){
+				TopScore.m_topScore = m_score;
+				TopScore.m_newFlag = true;
+			}
+			Application.LoadLevel("Contribute");
 		}
 	}
 	
@@ -635,7 +696,25 @@ public class Game : MonoBehaviour {
 			m_Status = NextStatus;
 			StartGameClear(m_Status);
 			break;
+		case eStatus.GameComplete:
+			m_Status = NextStatus;
+			StartGameComplete(m_Status);
+			break;
 		}
+	}
+
+	// ボールの移動処理関連を行う関数.
+	void MoveBall(cBall ball,BallCollision ballCollision){
+		if (ballCollision.Over () || ball.GetPosition().y <= -400) {
+			ball.SetSpeed(0.0f);
+			ballCollision.SetOverFlag();
+		}
+		if (ballCollision.Reflect()) {
+			ManageHit(ball,ballCollision);
+			m_deleteCount = m_ballCollision.DeleteCount() + m_ballCollision2.DeleteCount();
+			ballCollision.SetReflectFlag (false);
+		}
+		ball.Move();
 	}
 
 	// アイテムをランダムでセットする関数.
@@ -665,18 +744,10 @@ public class Game : MonoBehaviour {
 		}
 	}
 
-	void ManageHit(cBall ball, string hitTagName){
-		switch(hitTagName){
+	// ボールが何かにあったった時の処理をする関数
+	void ManageHit(cBall ball, BallCollision ballCollision){
+		switch(ballCollision.HitTagName()){
 		case null:
-			break;
-		case "RightWall":
-			ball.Reflect(eReflectCode.RightWall);
-			break;
-		case "LeftWall":
-			ball.Reflect(eReflectCode.LeftWall);
-			break;
-		case "TopWall":
-			ball.Reflect(eReflectCode.TopWall);
 			break;
 		case "Bar":
 			ball.Reflect(eReflectCode.Bar);
@@ -694,11 +765,6 @@ public class Game : MonoBehaviour {
 			}
 			else{
 				ball.Reflect(eReflectCode.TopWall);
-			}
-			if(!m_item.CheckMove()){
-				SetRandomItem();
-				m_item.SetPosition(m_ballCollision.BreakBlockPosition());
-				m_item.SetFallFlag(true);
 			}
 			m_score+=20;
 			break;
@@ -718,17 +784,39 @@ public class Game : MonoBehaviour {
 			}
 			m_score+=20;
 			break;
+		case "RightWall":
+			ball.Reflect(eReflectCode.RightWall);
+			break;
+		case "LeftWall":
+			ball.Reflect(eReflectCode.LeftWall);
+			break;
+		case "TopWall":
+			ball.Reflect(eReflectCode.TopWall);
+			break;
+		}
+
+		// アイテムを出現させる.
+		if((ballCollision.HitTagName() == "BlockTop" || ballCollision.HitTagName() == "BlockUnder" || 
+		    ballCollision.HitTagName() == "BlockRight" || ballCollision.HitTagName() == "BlockLeft")
+		   && !m_item.CheckMove()){
+				SetRandomItem();
+				m_item.SetPosition(ballCollision.BreakBlockPosition());
+				m_item.SetFallFlag(true);
 		}
 
 		// ブロックを消した数でボールの速さを変える.
 		if (m_deleteCount >= (int)(BlockNum * 0.2f)) {
-			m_ball.SetSpeed(4.0f);
+			if(m_ball.GetSpeed()!=0.0f){
+				m_ball.SetSpeed(4.0f);
+			}
 			if(m_ball2.GetSpeed()!=0.0f){
 				m_ball2.SetSpeed(4.0f);
 			}
 		}
 		if (m_deleteCount >= (int)(BlockNum * 0.8f)) {
-			m_ball.SetSpeed(6.0f);
+			if(m_ball.GetSpeed()!=0.0f){
+				m_ball.SetSpeed(6.0f);
+			}
 			if(m_ball2.GetSpeed()!=0.0f){
 				m_ball2.SetSpeed(6.0f);
 			}
