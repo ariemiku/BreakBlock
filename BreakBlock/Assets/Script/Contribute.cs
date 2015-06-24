@@ -11,6 +11,8 @@ public class Contribute : MonoBehaviour {
 	UIInput m_nameInput;
 	UIInput m_commentInput;
 
+	string m_url="";
+	WWWForm m_form;
 	
 	DateTime m_nowDate;
 
@@ -25,6 +27,7 @@ public class Contribute : MonoBehaviour {
 		m_commentInput = GameObject.Find ("UI Root/Panel/CommentInput").GetComponent<UIInput> ();
 
 		m_topScoreLabel.text = "Top Score : " + TopScore.GetTopScore ().ToString ();
+		// 記録更新でない時.
 		if (!TopScore.GetNewFlag ()) {
 			m_topNameLabel.text = "Top Name : " + TopScore.GetTopName ().ToString ();
 			m_nameInput.transform.localPosition = new Vector3(-200.0f,-500.0f,0.0f);
@@ -34,6 +37,7 @@ public class Contribute : MonoBehaviour {
 			m_commentLabel.text = "comment : " + TopScore.m_comment.ToString();
 
 		}
+		// 記録更新時.
 		else {
 			m_topNameLabel.text = "new recode! Please input your name.";
 			m_nameInput.transform.localPosition = new Vector3(-200.0f,-60.0f,0.0f);
@@ -61,11 +65,9 @@ public class Contribute : MonoBehaviour {
 
 				// 現在の日付と時刻を取得する
 				m_nowDate = DateTime.Now;
-				// 取得した日付と時刻を表示する
 
-				Debug.Log(m_nowDate.ToString());
-				Debug.Log(TopScore.GetTopName ());
-				Debug.Log(TopScore.m_comment);
+				// データを渡す.
+				StartCoroutine("Post",m_url);
 			}
 			else{
 				// タイトルに遷移する.
@@ -77,5 +79,19 @@ public class Contribute : MonoBehaviour {
 	// 入力された名前を格納する.
 	void CompletionNameInput(){
 		TopScore.m_name = m_nameInput.value;
+	}
+
+	// データを渡す関数.
+	IEnumerator Post (string url){
+		m_form = new WWWForm ();
+		m_form.AddField("score", TopScore.GetTopScore());
+		m_form.AddField("name", TopScore.GetTopName());
+		m_form.AddField("comment", TopScore.m_comment);
+		m_form.AddField("today", m_nowDate.ToString());
+		WWW www = new WWW(url, m_form);
+		yield return www;
+		if (www.error == null) {
+			Debug.Log (www.text);
+		}
 	}
 }

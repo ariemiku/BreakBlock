@@ -44,7 +44,7 @@ class cBar{
 	protected Vector2 position;		// 位置座標.
 	protected int life;				// 命.
 	protected UISprite sprite;		// バー本体.
-	protected float speed;
+	protected float speed;			// 移動速度.
 	protected UILabel label;
 
 	public cBar(){
@@ -152,7 +152,7 @@ class cBall{
 	protected float speed;			// ボールの速度.
 	protected Vector2 position;		// 位置座標.
 	protected UISprite sprite;		// ボール本体.
-	protected float rotation;
+	protected float rotation;		// ボールの傾き.
 
 	public cBall(){
 		sprite = GameObject.Find ("UI Root/Panel/Ball").GetComponent<UISprite> ();
@@ -286,12 +286,10 @@ class cItem{
 	public static readonly int UnderPositionY = -350;
 	protected Vector2 position;				// アイテムの位置座標.
 	protected UISprite sprite;				// アイテム本体.
-	protected float speed;
-	protected bool fallFlag;
-	protected float effectTime;
-	protected bool usingFlag = false;
-	protected float usingTime = 0.0f;
-
+	protected float speed;					// アイテムの落下速度.
+	protected bool fallFlag;				// 落ちているか.
+	protected float effectTime;				// アイテムの効果時間.
+	protected bool usingFlag = false;		// アイテムが取得されたか.
 
 	public cItem(){
 		position = new Vector2 (0.0f,-350.0f);
@@ -437,26 +435,26 @@ public class Game : MonoBehaviour {
 
 	private UILabel m_lavel;
 
-	private UILabel m_descriptionLabel;
+	private UILabel m_descriptionLabel;			// 説明文用.
 
 	private UILabel m_scoreLabel;
 	private int m_score = 0;
 
 	private eStatus m_Status;
 
-	private cBar m_myBar;
+	private cBar m_myBar;						// バー.
 	private GameObject m_bar;
 	private BarCollision m_barCollision;
 
-	private cBall m_ball;
+	private cBall m_ball;						// ボール.
 	private GameObject m_ballGameObject;
 	private BallCollision m_ballCollision;
 
-	private cBall m_ball2;
+	private cBall m_ball2;						// ボール2.
 	private GameObject m_ballGameObject2;
 	private BallCollision m_ballCollision2;
 
-	private cItem m_item;
+	private cItem m_item;								// アイテム.
 	private eItemCode m_itemCode = eItemCode.None;
 	private eItemCode m_usingItemCode = eItemCode.None;
 	private bool m_usingItem = false;
@@ -666,6 +664,7 @@ public class Game : MonoBehaviour {
 		}
 	}
 
+	// gameComplete状態の更新関数.
 	void UpdateGameComplete(){
 		// enterキーで遷移する.
 		if (Input.GetKeyDown (KeyCode.Return)) {

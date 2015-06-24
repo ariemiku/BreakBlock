@@ -1,12 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class TopScore : MonoBehaviour {
-	public static int m_topScore = 1000;
+public class TopScore : MonoBehaviour { 
+	public static int m_topScore = 100;
 	public static string m_name = "one";
 	public static string m_comment = "comment";
 	public static bool m_newFlag = false;
-
+	
 	// トップスコアを取得する関数.
 	public static int GetTopScore(){
 		return m_topScore;
