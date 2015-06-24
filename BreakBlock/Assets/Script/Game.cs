@@ -26,6 +26,7 @@ enum eReflectCode{
 	LeftWall,
 	TopWall,
 	UnderWall,
+	Under,
 	Bar,
 };
 
@@ -199,6 +200,10 @@ class cBall{
 			wallAngle = 90.0f;
 			break;
 		case eReflectCode.UnderWall:
+			// 下の壁に衝突.
+			wallAngle = 270.0f;
+			break;
+		case eReflectCode.Under:
 			// 下の壁に衝突.
 			wallAngle = 270.0f;
 			break;
@@ -788,6 +793,9 @@ public class Game : MonoBehaviour {
 			break;
 		case "LeftWall":
 			ball.Reflect(eReflectCode.LeftWall);
+			break;
+		case "Under":
+			ball.Reflect(eReflectCode.Under);
 			break;
 		case "TopWall":
 			ball.Reflect(eReflectCode.TopWall);

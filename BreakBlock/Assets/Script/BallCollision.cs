@@ -58,6 +58,9 @@ public class BallCollision : MonoBehaviour {
 		if (c.gameObject.tag == "TopWall") {
 			m_hitTagName = "TopWall";
 		}
+		if (c.gameObject.tag == "Under") {
+			m_hitTagName = "Under";
+		}
 		if (c.gameObject.tag == "Bar") {
 			m_hitTagName = "Bar";
 		}	
