@@ -42,4 +42,8 @@ public class BarCollision : MonoBehaviour {
 	public bool HitItem(){
 		return m_hitItemFlag;
 	}
+
+	public void SetHitItemFlag(bool flag=false){
+		m_hitItemFlag = flag;
+	}
 }

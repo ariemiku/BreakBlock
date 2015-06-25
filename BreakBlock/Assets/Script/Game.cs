@@ -184,7 +184,6 @@ class cBall{
 
 	// 反射を行う関数.
 	public void Reflect(eReflectCode reflectCode){
-		//float reflectAngle;
 		float wallAngle = 0.0f;
 		switch (reflectCode) {
 		case eReflectCode.RightWall:
@@ -240,21 +239,21 @@ class cBall{
 	
 	bool NotFrameOver(Vector2 pos){
 		if (pos.x < -213.0f) {
-			Reflect(eReflectCode.LeftWall);
 			pos.x=-212.0f;
 			SetPosition (pos);
+			Reflect(eReflectCode.LeftWall);
 			return false;
 		}
 		if (pos.x > 213.0f){
-			Reflect(eReflectCode.RightWall);
 			pos.x=212.0f;
 			SetPosition (pos);
+			Reflect(eReflectCode.RightWall);
 			return false;
 		}
 		if(pos.y > 313.0f){
-			Reflect(eReflectCode.TopWall);
 			pos.y=313.0f;
 			SetPosition (pos);
+			Reflect(eReflectCode.TopWall);
 			return false;
 		}
 		return true;
@@ -377,6 +376,7 @@ class cItem2 : cItem{
 
 	// ボールを2つにする処理.
 	public override void Effect(cBar bar,cBall ball,cBall ball2){
+		bar.SetInitialize ();
 		if (ball2.GetSpeed () <= 0.0f) {
 			ball2.SetPosition (ball.GetPosition ());
 			ball2.SetLotation (ball.GetLotation () + 90.0f);
@@ -430,6 +430,7 @@ class cItem5 : cItem{
 
 	// 命を増やす処理
 	public override void Effect(cBar bar,cBall ball,cBall ball2){
+		bar.SetInitialize ();
 		bar.AddLife ();
 	}
 }
@@ -617,6 +618,7 @@ public class Game : MonoBehaviour {
 			m_item.SetInitializePos();
 			m_usingItemCode = m_itemCode;
 			usingTime = 0.0f;
+			m_barCollision.SetHitItemFlag();
 		}
 
 		MoveBall (m_ball,m_ballCollision);
@@ -747,7 +749,7 @@ public class Game : MonoBehaviour {
 			break;
 		}
 	}
-
+	
 	// ボールが何かにあったった時の処理をする関数
 	void ManageHit(cBall ball, BallCollision ballCollision){
 		switch(ballCollision.HitTagName()){
