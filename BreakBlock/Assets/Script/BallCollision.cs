@@ -11,8 +11,7 @@ public class BallCollision : MonoBehaviour {
 	// コライダーとリジットボディを利用した当たり判定を行う関数.
 	void OnTriggerEnter2D(Collider2D c){
 		m_reflectFlag = true;
-
-		
+						
 		// ブロックに衝突した場合
 		if (c.gameObject.tag == "BlockTop") {
 			m_hitTagName = "BlockTop";
@@ -71,6 +70,7 @@ public class BallCollision : MonoBehaviour {
 			m_overFlag = true;
 		}
 	}
+
 
 	public bool Over(){
 		return m_overFlag;

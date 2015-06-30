@@ -220,45 +220,23 @@ class cBall{
 	
 	// ボールの移動行う関数.
 	public void Move(){
+
 		Vector2 pos;
 		pos.x = sprite.transform.localPosition.x;
 		pos.y = sprite.transform.localPosition.y;
+
 
 		Vector2 move;
 		move.x = sprite.transform.up.x * speed;
 		move.y = sprite.transform.up.y * speed;
 
-		// 自身の向きに移動.
-		if (NotFrameOver (pos)) {
-			pos.x += move.x;
-			pos.y += move.y;
 
-			SetPosition (pos);
-		}
+		pos.x += move.x;
+		pos.y += move.y;
+
+		SetPosition (pos);
 	}
 	
-	bool NotFrameOver(Vector2 pos){
-		if (pos.x < -213.0f) {
-			pos.x=-212.0f;
-			SetPosition (pos);
-			Reflect(eReflectCode.LeftWall);
-			return false;
-		}
-		if (pos.x > 213.0f){
-			pos.x=212.0f;
-			SetPosition (pos);
-			Reflect(eReflectCode.RightWall);
-			return false;
-		}
-		if(pos.y > 313.0f){
-			pos.y=313.0f;
-			SetPosition (pos);
-			Reflect(eReflectCode.TopWall);
-			return false;
-		}
-		return true;
-	}
-
 	// ボールの傾きを取得する関数.
 	public float GetLotation(){
 		return rotation;

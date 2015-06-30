@@ -11,8 +11,9 @@ public class Contribute : MonoBehaviour {
 	UIInput m_nameInput;
 	UIInput m_commentInput;
 
-	string m_url="";
+	string m_url="http://ubuntu7/inoue/comment.py";
 	WWWForm m_form;
+	string score;
 	
 	DateTime m_nowDate;
 
@@ -43,6 +44,9 @@ public class Contribute : MonoBehaviour {
 			m_nameInput.transform.localPosition = new Vector3(-200.0f,-60.0f,0.0f);
 			m_descriptionLabel.text = "contribute score in enter";
 		}
+
+		// 文字列へ変換.
+		score = "スコア:" + TopScore.GetTopScore();
 	}
 
 	// Update is called once per frame
@@ -84,10 +88,10 @@ public class Contribute : MonoBehaviour {
 	// データを渡す関数.
 	IEnumerator Post (string url){
 		m_form = new WWWForm ();
-		m_form.AddField("score", TopScore.GetTopScore());
 		m_form.AddField("name", TopScore.GetTopName());
-		m_form.AddField("comment", TopScore.m_comment);
-		m_form.AddField("today", m_nowDate.ToString());
+		m_form.AddField("comment", score);
+		//m_form.AddField("comment", TopScore.m_comment);
+		m_form.AddField("date", m_nowDate.ToString());
 		WWW www = new WWW(url, m_form);
 		yield return www;
 		if (www.error == null) {

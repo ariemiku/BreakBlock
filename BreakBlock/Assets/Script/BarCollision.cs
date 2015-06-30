@@ -12,13 +12,14 @@ public class BarCollision : MonoBehaviour {
 			m_hitItemFlag = true;
 		}
 
+		/*
 		if(c.gameObject.tag == "RightWall"){
 			m_hitStageFlag = true;
 		}
 
 		if(c.gameObject.tag == "LeftWall"){
 			m_hitStageFlag = true;
-		}
+		}*/
 	}
 
 	void OnTriggerExit2D(Collider2D c){
