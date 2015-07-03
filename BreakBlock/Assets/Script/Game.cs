@@ -613,6 +613,7 @@ public class Game : MonoBehaviour {
 				Transit (eStatus.Gameover);
 			}else{
 				m_myBar.SubtractionLife();
+				m_ball.SetSpeed(3.0f);
 				Transit (eStatus.Tutorial);
 			}
 		}
